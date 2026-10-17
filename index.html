@@ -1,0 +1,1732 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>開発チーム予定表</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<style>
+:root{
+  --bg:#f2f4f7; --surface:#fff; --surface2:#f7f8fa; --border:#d6dbe2; --border-strong:#aeb7c3;
+  --text:#1e2833; --muted:#5d6876; --primary:#2c5a85; --primary-weak:#e4edf6; --danger:#b03a3a;
+  --sat:#edf3fa; --sun:#fbeeee; --sat-text:#2c5a85; --sun-text:#b03a3a; --today:#fff4cc;
+  --sel:rgba(44,90,133,.22); --warn:#9a6a00; --warn-bg:#fff4d6;
+  --dw:96px; --sw:44px;
+  font-size:16px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"BIZ UDPGothic","Meiryo","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;line-height:1.5}
+[hidden]{display:none!important}
+button{font:inherit;font-size:.95rem;padding:.38rem .8rem;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);border-radius:6px;cursor:pointer;white-space:nowrap}
+button:hover{background:var(--primary-weak)}
+button:disabled{opacity:.55;cursor:default}
+button.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+button.primary:hover{background:#244b6f}
+button.danger{color:var(--danger);border-color:#d9a3a3}
+button.ghost{border-color:transparent;background:transparent}
+button.small{font-size:.85rem;padding:.2rem .55rem}
+button.active{background:var(--primary);border-color:var(--primary);color:#fff}
+input[type=text],input[type=email],input[type=password],input[type=date],input[type=time],select{font:inherit;font-size:1rem;padding:.35rem .5rem;border:1px solid var(--border-strong);border-radius:6px;background:#fff;color:var(--text);max-width:100%}
+input[type=text],input[type=email],input[type=password]{width:100%}
+input[type=color]{width:2.6rem;height:2rem;padding:0;border:1px solid var(--border-strong);border-radius:4px;background:#fff}
+label.inline{display:inline-flex;align-items:center;gap:.3rem;margin-right:.9rem;white-space:nowrap;cursor:pointer}
+.muted{color:var(--muted)}
+.hint{color:var(--muted);font-size:.85rem;margin:.25rem 0}
+.error{color:var(--danger);font-weight:700;min-height:1.2em;margin:.4rem 0}
+.spacer{flex:1}
+.badge{display:inline-block;font-size:.75rem;padding:.05rem .45rem;border-radius:999px;background:var(--primary-weak);color:var(--primary);margin-left:.35rem;white-space:nowrap}
+.badge.gray{background:#e8eaed;color:#5d6876}
+.badge.warn{background:var(--warn-bg);color:var(--warn)}
+.badge.ok{background:#e3f2ea;color:#2e6b4a}
+
+/* ヘッダー */
+.app-header{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;padding:.6rem 1rem;background:var(--surface);border-bottom:1px solid var(--border)}
+.app-header h1{font-size:1.2rem;margin:0;color:var(--primary)}
+.tabs{display:flex;gap:.3rem}
+.header-actions{display:flex;align-items:center;gap:.4rem;margin-left:auto;flex-wrap:wrap}
+.user{color:var(--muted);font-size:.9rem;margin-left:.4rem}
+button.filter-on{border-color:var(--primary);color:var(--primary);font-weight:700}
+
+/* 絞り込み */
+.popover{position:absolute;right:1rem;top:3.4rem;z-index:50;background:var(--surface);border:1px solid var(--border-strong);border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.15);padding:1rem;width:min(420px,calc(100vw - 2rem))}
+.popover h4{margin:.2rem 0 .4rem;font-size:.95rem}
+.popover .opts{display:flex;flex-wrap:wrap;gap:.2rem 0;margin-bottom:.6rem}
+.popover .foot{display:flex;gap:.5rem;justify-content:flex-end;border-top:1px solid var(--border);padding-top:.6rem}
+
+/* サマリー */
+.summary{display:grid;grid-template-columns:minmax(260px,1fr) 2fr;gap:.8rem;padding:.8rem 1rem 0}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.6rem .9rem}
+.card h3{font-size:.95rem;margin:0 0 .35rem;color:var(--primary)}
+.card summary{cursor:pointer;font-size:.95rem;font-weight:700;color:var(--primary)}
+.abs-list{display:flex;flex-wrap:wrap;gap:.3rem .9rem}
+.abs-item{border-left:4px solid var(--c);padding-left:.4rem}
+.wk-list{max-height:9.5rem;overflow:auto;margin-top:.35rem}
+.wk-day{display:flex;gap:.5rem;padding:.15rem 0;border-bottom:1px dotted var(--border);align-items:flex-start}
+.wk-day > .d{flex:0 0 5.2rem;font-weight:700}
+.wk-day.sat > .d{color:var(--sat-text)} .wk-day.sun > .d{color:var(--sun-text)}
+.wk-day .items{display:flex;flex-wrap:wrap;gap:.2rem .3rem}
+.wk-day .chip{display:inline-block;margin:0}
+.notice{grid-column:1/-1;background:var(--warn-bg);border:1px solid #ecd28c;border-radius:8px;padding:.45rem .9rem;color:var(--warn);display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+
+/* 凡例 */
+.legend{display:flex;flex-wrap:wrap;align-items:center;gap:.35rem;padding:.6rem 1rem 0}
+.legend-item{border:1px solid var(--border);border-left:6px solid var(--c);background:color-mix(in srgb,var(--c) 12%,#fff);font-size:.85rem;padding:.12rem .55rem}
+.legend-item.off{opacity:.4;text-decoration:line-through}
+.legend .slot-info{margin-left:auto;color:var(--muted);font-size:.85rem}
+
+/* ツールバー */
+.toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:.6rem;padding:.6rem 1rem}
+.toolbar .nav{display:flex;align-items:center;gap:.4rem}
+.toolbar h2{font-size:1.2rem;margin:0 .5rem;min-width:9rem;text-align:center}
+.toolbar .tb-right{margin-left:auto;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+.print-only{display:none}
+main#view{padding:0 1rem 1.5rem}
+
+/* カレンダー共通 */
+.grid-wrap{overflow:auto;max-height:calc(100vh - 250px);min-height:320px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+table.grid{border-collapse:separate;border-spacing:0;width:100%;table-layout:fixed;user-select:none;-webkit-user-select:none}
+.grid th,.grid td{border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:2px 4px;vertical-align:top;background-clip:padding-box}
+.grid thead th{position:sticky;top:0;background:var(--surface2);z-index:3;font-weight:700;font-size:.95rem;text-align:center;vertical-align:middle;padding:.35rem .25rem}
+.grid th.c-member,.grid th.c-name{border-top:4px solid var(--mc)}
+.grid td.cell{cursor:cell;background:var(--surface)}
+.grid td.cell:hover{box-shadow:inset 0 0 0 2px rgba(44,90,133,.28)}
+.grid td.cell.sel{background:var(--sel)!important}
+body.readonly .grid td.cell{cursor:default}
+body.readonly .grid td.cell:hover{box-shadow:none}
+.badge.view-only{background:#e8eaed;color:#3d4753;font-weight:700}
+.hol{display:block;font-size:.72rem;color:var(--sun-text);font-weight:400;line-height:1.2}
+
+/* 予定チップ */
+.chip{display:block;margin:2px 0;padding:1px 6px;border-left:4px solid var(--c);background:color-mix(in srgb,var(--c) 14%,#fff);border-radius:3px;font-size:.88rem;line-height:1.35;cursor:pointer;word-break:break-all;color:var(--text)}
+.chip:hover{background:color-mix(in srgb,var(--c) 26%,#fff)}
+.chip.allday{background:color-mix(in srgb,var(--c) 24%,#fff)}
+.chip .cat-tag{font-size:.75em;color:var(--muted);margin-right:.25em}
+.chip .slot-tag{font-size:.75em;color:var(--c);margin-right:.3em}
+.chip .loc{font-size:.78em;color:var(--muted);margin-left:.3em}
+.chip .rep{font-size:.78em;color:var(--muted);margin-left:.3em}
+
+/* 月表示 */
+.month{min-width:calc(var(--dw) + var(--sw) + var(--cols) * 140px)}
+.month th.c-date,.month td.c-date{position:sticky;left:0;width:var(--dw);z-index:2;background:var(--surface);text-align:center;vertical-align:middle;font-weight:700}
+.month th.c-slot,.month td.c-slot{position:sticky;left:var(--dw);width:var(--sw);z-index:2;background:var(--surface);text-align:center;vertical-align:middle;font-size:.8rem;color:var(--muted)}
+.month thead th.c-date,.month thead th.c-slot{z-index:4}
+.month td.c-date{border-bottom:2px solid var(--border-strong)}
+.month tr.am > td.cell,.month tr.am > td.c-slot{border-bottom:1px dashed var(--border)}
+.month tr.pm > td{border-bottom:2px solid var(--border-strong)}
+.month td.cell{height:32px}
+.month tr.sat > td{background:var(--sat)} .month tr.sun > td{background:var(--sun)}
+.month tr.sat > td.c-date{color:var(--sat-text)} .month tr.sun > td.c-date{color:var(--sun-text)}
+.month tr.today > td{background:var(--today)}
+.month tr.today > td.c-date{box-shadow:inset 5px 0 0 var(--primary)}
+
+/* 週表示 */
+.week{min-width:calc(100px + var(--days) * 2 * 84px)}
+.week th.c-name{position:sticky;left:0;width:100px;z-index:2;background:var(--surface2);text-align:left;vertical-align:middle;padding:.3rem .5rem}
+.week thead th.c-name{z-index:5;border-top:none}
+.week thead tr:first-child th{height:3rem}
+.week thead tr.sub th{top:3rem;font-size:.8rem;color:var(--muted);font-weight:400;padding:.15rem}
+.week thead th.sat{background:var(--sat);color:var(--sat-text)} .week thead th.sun{background:var(--sun);color:var(--sun-text)}
+.week thead th.today{background:var(--today)}
+.week td.cell{height:66px}
+.week td.cell.am{border-right:1px dashed var(--border)}
+.week td.cell.pm{border-right:1px solid var(--border-strong)}
+.week td.cell.sat{background:var(--sat)} .week td.cell.sun{background:var(--sun)} .week td.cell.today{background:var(--today)}
+
+/* リスト表示 */
+.list-view{display:flex;flex-direction:column;gap:.5rem}
+.day-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.45rem .7rem}
+.day-card header{display:flex;align-items:center;gap:.6rem;font-weight:700}
+.day-card.sat header{color:var(--sat-text)} .day-card.sun header{color:var(--sun-text)}
+.day-card.sat{background:var(--sat)} .day-card.sun{background:var(--sun)}
+.day-card.today{border:2px solid var(--primary)}
+.day-card header button{margin-left:auto}
+.lv-row{display:flex;gap:.6rem;padding:.2rem 0;border-top:1px dotted var(--border)}
+.lv-name{flex:0 0 4.5rem;font-weight:700;border-left:4px solid var(--mc);padding-left:.35rem}
+.lv-evs{flex:1;min-width:0}
+
+/* ダイアログ */
+dialog{border:none;border-radius:10px;padding:0;width:min(680px,96vw);max-height:94vh;box-shadow:0 10px 40px rgba(0,0,0,.25);color:var(--text)}
+dialog::backdrop{background:rgba(20,30,40,.4)}
+.form{padding:1.1rem 1.3rem}
+.form h3{margin:0 0 .6rem;font-size:1.15rem;color:var(--primary)}
+.row{display:grid;grid-template-columns:7rem 1fr;gap:.6rem;align-items:start;margin:.55rem 0}
+.row > label{font-weight:700;padding-top:.35rem;font-size:.95rem}
+.fld{min-width:0}
+.actions{display:flex;gap:.5rem;align-items:center;margin-top:.8rem;border-top:1px solid var(--border);padding-top:.8rem}
+.meta{font-size:.8rem;color:var(--muted);margin:.4rem 0 0}
+.cat-select,.member-select{display:flex;flex-wrap:wrap;gap:.35rem}
+.cat-opt input,.mem-opt input{position:absolute;opacity:0;pointer-events:none}
+.cat-opt span,.mem-opt span{display:inline-block;padding:.25rem .7rem;border:1px solid var(--border-strong);border-left:6px solid var(--c,var(--mc));border-radius:5px;cursor:pointer;background:#fff;font-size:.92rem}
+.cat-opt input:checked + span{background:var(--c);color:#fff;border-color:var(--c)}
+.mem-opt input:checked + span{background:var(--mc);color:#fff;border-color:var(--mc)}
+.cat-opt input:focus-visible + span,.mem-opt input:focus-visible + span{outline:2px solid var(--primary);outline-offset:1px}
+.swatches{display:flex;gap:.3rem;flex-wrap:wrap;align-items:center}
+.swatches button{width:1.6rem;height:1.6rem;padding:0;border-radius:4px}
+
+/* 設定 */
+.settings{background:var(--surface);border:1px solid var(--border);border-radius:8px}
+.subtabs{display:flex;flex-wrap:wrap;gap:.3rem;padding:.6rem .8rem;border-bottom:1px solid var(--border);background:var(--surface2);border-radius:8px 8px 0 0}
+.settings-body{padding:1rem 1.2rem}
+.settings-body h3{font-size:1.05rem;margin:1rem 0 .5rem;color:var(--primary)}
+.settings-body h3:first-child{margin-top:0}
+.tab-head{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+table.tbl{border-collapse:collapse;width:100%;font-size:.92rem}
+.tbl th,.tbl td{border-bottom:1px solid var(--border);padding:.4rem .5rem;text-align:left;vertical-align:middle}
+.tbl th{background:var(--surface2);font-weight:700}
+.tbl td.act{white-space:nowrap;text-align:right}
+.tbl tr.warn td{background:var(--warn-bg)}
+.tbl-wrap{overflow-x:auto}
+.member-list{list-style:none;padding:0;margin:.6rem 0}
+.member-list li{display:flex;align-items:center;gap:.6rem;padding:.5rem .6rem;border:1px solid var(--border);border-radius:6px;margin-bottom:.35rem;background:#fff;flex-wrap:wrap}
+.member-list li.inactive{opacity:.6;background:var(--surface2)}
+.drag-handle{cursor:grab;font-size:1.2rem;color:var(--muted);padding:0 .3rem;touch-action:none}
+.swatch{width:1.1rem;height:1.1rem;border-radius:3px;display:inline-block}
+.m-name{font-weight:700;min-width:5rem}
+.m-email{color:var(--muted);font-size:.88rem}
+.sortable-ghost{opacity:.4}
+.diff{font-size:.85rem;color:var(--muted);margin:.2rem 0 0;padding-left:1rem}
+.time-grid{display:grid;grid-template-columns:6rem auto;gap:.5rem .8rem;align-items:center;max-width:420px}
+
+/* 全画面メッセージ */
+.screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem}
+.screen .card{max-width:640px;width:100%;padding:1.5rem 1.8rem}
+.screen h1,.screen h2{color:var(--primary);margin-top:0}
+.screen button.big{font-size:1.1rem;padding:.6rem 1.4rem}
+.setup table{width:100%}
+.toast{position:fixed;left:50%;bottom:1.2rem;transform:translateX(-50%);background:#24313f;color:#fff;padding:.6rem 1.1rem;border-radius:8px;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,.25);max-width:92vw}
+.toast.error{background:var(--danger)}
+.auth-tabs{margin:0 0 .8rem;border-radius:8px}
+.auth-form .row{grid-template-columns:9rem 1fr}
+.ok-msg{color:#2e6b4a;font-weight:700;margin:.4rem 0}
+.ok-msg:empty{display:none}
+.confidential{background:var(--warn-bg);border:1px solid #ecd28c;border-left:5px solid #d9a520;color:#6b4a00;border-radius:6px;padding:.45rem .7rem;margin:0 0 .6rem;font-size:.9rem;font-weight:700}
+
+/* スマホ */
+@media (max-width:767px){
+  :root{font-size:15px;--dw:72px;--sw:34px}
+  .app-header{padding:.5rem .7rem;gap:.5rem}
+  .header-actions{margin-left:0;width:100%}
+  .summary{grid-template-columns:1fr;padding:.6rem .7rem 0}
+  .legend,.toolbar{padding-left:.7rem;padding-right:.7rem}
+  main#view{padding:0 .7rem 1rem}
+  .toolbar h2{min-width:0;font-size:1.05rem}
+  .row{grid-template-columns:1fr;gap:.2rem}
+  .row > label{padding-top:0}
+  .month{min-width:calc(var(--dw) + var(--sw) + var(--cols) * 110px)}
+  .legend .slot-info{margin-left:0;width:100%}
+}
+
+/* 印刷（A4横） */
+@page{size:A4 landscape;margin:8mm}
+@media print{
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{background:#fff;font-size:9pt}
+  .no-print,.toolbar button,.toolbar label,.toast{display:none!important}
+  .print-only{display:inline}
+  .toolbar{padding:0 0 2mm}
+  .toolbar h2{font-size:12pt;text-align:left;margin:0}
+  main#view{padding:0}
+  .grid-wrap{overflow:visible;max-height:none;min-height:0;border:none}
+  .grid{min-width:0!important;width:100%}
+  .grid thead th,.week th.c-name,.month .c-date,.month .c-slot{position:static}
+  .grid thead th{font-size:8.5pt;padding:1mm}
+  .week thead tr:first-child th{height:auto}
+  .week th.c-name{width:22mm;font-size:9pt}
+  .week td.cell{height:auto;min-height:12mm}
+  .week tbody tr{break-inside:avoid}
+  .chip{font-size:7.5pt;padding:0 2px;border-left-width:3px;margin:1px 0}
+  .week.dense .chip{font-size:6.5pt}
+  .grid td.cell:hover{box-shadow:none}
+}
+</style>
+</head>
+<body>
+
+<div id="app" hidden>
+  <header class="app-header no-print">
+    <h1 id="appTitle">開発チーム予定表</h1>
+    <nav class="tabs">
+      <button data-view="month">月表示</button>
+      <button data-view="week">週表示</button>
+      <button data-view="list">リスト</button>
+    </nav>
+    <div class="header-actions">
+      <button id="btnFilter" data-act="filter">絞り込み</button>
+      <button data-act="csv">CSV出力</button>
+      <button data-view="settings">設定</button>
+      <span class="user" id="userName"></span>
+      <button class="ghost" data-act="logout">ログアウト</button>
+    </div>
+  </header>
+  <div id="filterPanel" class="popover no-print" hidden></div>
+  <section id="summary" class="summary no-print"></section>
+  <section id="legend" class="legend no-print"></section>
+  <section id="toolbar" class="toolbar"></section>
+  <main id="view"></main>
+</div>
+<div id="screen" class="screen"><p class="muted">読み込み中…</p></div>
+<dialog id="dlg"></dialog>
+<div id="toast" class="toast" hidden></div>
+
+<script type="module">
+// =====================================================================
+//  設定値（ここを差し替えてください）
+// =====================================================================
+// Firebase コンソール →「プロジェクトの設定」→「マイアプリ」の firebaseConfig を貼り付け
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDeRe-85CPYI8yi1f-kT6KW8F-pZucpLwk",
+  authDomain: "team-schedule-8d016.firebaseapp.com",
+  projectId: "team-schedule-8d016",
+  storageBucket: "team-schedule-8d016.firebasestorage.app",
+  messagingSenderId: "271713705149",
+  appId: "1:271713705149:web:7b54a3610a0c605e13abd4",
+};
+const APP_TITLE = '開発チーム予定表';
+
+// 初期セットアップ画面で使う初期メンバー（後から設定画面で変更可）
+const INITIAL_MEMBERS = [
+  { name: '高田', isAdmin: true },
+  { name: '山本' },
+  { name: '栗塚' },
+  { name: '遠藤' },
+];
+// 時間帯の初期値（設定画面で変更可）
+const DEFAULT_SLOTS = {
+  am:    { start: '08:25', end: '12:00' },
+  lunch: { start: '12:00', end: '12:45' },
+  pm:    { start: '12:45', end: '17:00' },
+};
+// 種別の初期値（isAbsence: 「今日の不在者」に表示する種別）
+const DEFAULT_CATEGORIES = [
+  { id: 'experiment', name: '実験',       color: '#3b6ea5' },
+  { id: 'analysis',   name: '分析',       color: '#2e8b7a' },
+  { id: 'trip',       name: '出張',       color: '#c0703a', isAbsence: true },
+  { id: 'meeting',    name: '会議',       color: '#6a5a9c' },
+  { id: 'customer',   name: '顧客対応',   color: '#b5485d' },
+  { id: 'external',   name: '社外打合せ', color: '#8a6d3b', isAbsence: true },
+  { id: 'office',     name: '事務作業',   color: '#5f7a5a' },
+  { id: 'leave',      name: '休暇',       color: '#8c8c8c', isAbsence: true },
+  { id: 'other',      name: 'その他',     color: '#6b7a8c' },
+].map((c, i) => ({ isAbsence: false, hidden: false, ...c, order: i + 1 }));
+// 場所の選択肢（変更する場合は firestore.rules の validEvent も合わせて変更してください）
+const LOCATIONS = ['社内', '社外（近隣）', '出張'];
+// 予定入力ダイアログに常に表示する注意書き
+const CONFIDENTIAL_NOTICE = '顧客名・出張先・実験条件や結果は記入しないでください（例：顧客訪問、出張、○○テーマ実験）';
+const MEMBER_COLORS =['#2c5a85', '#2e7d6b', '#a0522d', '#6a5a9c', '#b5485d', '#8a6d3b', '#3d7a9c', '#5f7a5a', '#9c4f7a', '#4f5b9c'];
+const EXPIRY_WARN_DAYS = 30;   // 繰り返し予定の「終了間近」とみなす日数
+const BULK_CONFIRM = 200;      // これを超える件数を一度に登録するときは確認する
+
+// =====================================================================
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { getFirestore, collection, doc, getDoc, getDocs, onSnapshot, query, where, orderBy, limit, writeBatch, serverTimestamp, deleteField } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+const SLOT_LABEL = { am: '午前', pm: '午後', allday: '終日' };
+const SLOT_RANK = { allday: 0, am: 1, pm: 2 };
+const WD = ['日', '月', '火', '水', '木', '金', '土'];
+const WD_ORDER = [1, 2, 3, 4, 5, 6, 0];
+
+class UserError extends Error {}
+
+// ---------- 汎用 ----------
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const byOrder = (a, b) => (a.order ?? 0) - (b.order ?? 0);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('tsched.' + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('tsched.' + k, JSON.stringify(v)); } catch { /* 保存できなくても動作に支障なし */ } },
+};
+
+// ---------- 日付 ----------
+const pad = n => String(n).padStart(2, '0');
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parseYmd = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+const addMonths = (d, n) => new Date(d.getFullYear(), d.getMonth() + n, d.getDate());
+const addYears = (d, n) => new Date(d.getFullYear() + n, d.getMonth(), d.getDate());
+const startOfWeek = d => addDays(d, -((d.getDay() + 6) % 7)); // 月曜始まり
+const dayNum = s => { const [y, m, d] = s.split('-').map(Number); return Date.UTC(y, m - 1, d) / 864e5; };
+const numToYmd = n => { const d = new Date(n * 864e5); return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`; };
+const todayStr = () => ymd(new Date());
+function dateRange(from, to) { const out = []; for (let d = parseYmd(from); ymd(d) <= to; d = addDays(d, 1)) out.push(ymd(d)); return out; }
+function fmtMD(s) { const d = parseYmd(s); return `${d.getMonth() + 1}/${d.getDate()}(${WD[d.getDay()]})`; }
+function fmtYMD(s) { const d = parseYmd(s); return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}(${WD[d.getDay()]})`; }
+function fmtRange(dates) { return dates.length === 1 ? fmtMD(dates[0]) : `${fmtMD(dates[0])}〜${fmtMD(dates[dates.length - 1])}`; }
+function fmtTs(ts) { const d = ts?.toDate?.(); return d ? `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}` : ''; }
+const fmtTime = s => (s || '').replace(/^0(\d)/, '$1');
+
+// ---------- 日本の祝日（振替休日・国民の休日を含む） ----------
+function nthMonday(y, m, n) { const first = new Date(y, m - 1, 1); return new Date(y, m - 1, 1 + (8 - first.getDay()) % 7 + (n - 1) * 7); }
+function computeHolidays(y) {
+  const h = new Map();
+  const add = (m, d, name) => h.set(`${y}-${pad(m)}-${pad(d)}`, name);
+  const addD = (dt, name) => h.set(ymd(dt), name);
+  const eq = base => Math.floor(base + 0.242194 * (y - 1980) - Math.floor((y - 1980) / 4));
+  add(1, 1, '元日');
+  addD(nthMonday(y, 1, 2), '成人の日');
+  add(2, 11, '建国記念の日');
+  if (y >= 2020) add(2, 23, '天皇誕生日');
+  add(3, eq(20.8431), '春分の日');
+  add(4, 29, '昭和の日');
+  add(5, 3, '憲法記念日'); add(5, 4, 'みどりの日'); add(5, 5, 'こどもの日');
+  if (y === 2020) { add(7, 23, '海の日'); add(7, 24, 'スポーツの日'); add(8, 10, '山の日'); }
+  else if (y === 2021) { add(7, 22, '海の日'); add(7, 23, 'スポーツの日'); add(8, 8, '山の日'); }
+  else { addD(nthMonday(y, 7, 3), '海の日'); add(8, 11, '山の日'); addD(nthMonday(y, 10, 2), 'スポーツの日'); }
+  addD(nthMonday(y, 9, 3), '敬老の日');
+  add(9, eq(23.2488), '秋分の日');
+  add(11, 3, '文化の日');
+  add(11, 23, '勤労感謝の日');
+  for (const k of [...h.keys()].sort()) { // 国民の休日：祝日に挟まれた平日
+    const mid = addDays(parseYmd(k), 1);
+    if (h.has(ymd(addDays(parseYmd(k), 2))) && !h.has(ymd(mid)) && mid.getDay() !== 0) h.set(ymd(mid), '国民の休日');
+  }
+  for (const k of [...h.keys()].sort()) { // 振替休日：日曜の祝日の次の平日
+    if (parseYmd(k).getDay() !== 0) continue;
+    let n = addDays(parseYmd(k), 1);
+    while (h.has(ymd(n))) n = addDays(n, 1);
+    h.set(ymd(n), '振替休日');
+  }
+  return h;
+}
+const holidayCache = new Map();
+function holidayName(s) {
+  const y = +s.slice(0, 4);
+  if (!holidayCache.has(y)) holidayCache.set(y, computeHolidays(y));
+  const h = holidayCache.get(y).get(s);
+  if (h) return h;
+  const c = (S.config?.companyHolidays || []).find(x => x.date === s);
+  return c ? (c.name || '会社休日') : '';
+}
+function dayKind(s) { const w = parseYmd(s).getDay(); if (w === 0 || holidayName(s)) return 'sun'; if (w === 6) return 'sat'; return ''; }
+const isOffDay = s => dayKind(s) !== '';
+
+// =====================================================================
+//  状態
+// =====================================================================
+const S = {
+  user: null, email: '', allowed: null, config: null,
+  members: [], viewers: [], events: [], weekEvents: [], recurrences: [], history: [], historyLoaded: false, legacyAllowed: [],
+  view: 'month', cursor: new Date(), settingsTab: 'rec', showInactiveSettings: false,
+  filters: { hiddenCats: [], hiddenMembers: [], showInactive: false, ...store.get('filters', {}) },
+  showWeekend: store.get('showWeekend', false),
+  unsubs: [], unsubRange: null, rangeKey: null, lastViewKey: null,
+};
+let app, auth, db;
+
+const cats = () => S.config.categories.slice().sort(byOrder);
+const catById = id => S.config.categories.find(c => c.id === id);
+const catName = id => catById(id)?.name || id;
+const memberById = id => S.members.find(m => m.id === id);
+const memberName = id => memberById(id)?.name || '（不明）';
+// 役割：admin（管理者）／member（メンバー）／viewer（閲覧者）
+// role が無い旧形式のデータ（isAdmin のみ）は、移行が済むまで admin / member として扱う
+const ROLE_LABEL = { admin: '管理者', member: 'メンバー', viewer: '閲覧者' };
+const roleOf = a => !a ? null : (a.role || (a.isAdmin === true ? 'admin' : 'member'));
+const myRole = () => roleOf(S.allowed);
+const isAdmin = () => myRole() === 'admin';
+const canEdit = () => myRole() === 'admin' || myRole() === 'member';
+const isViewer = () => myRole() === 'viewer';
+const memberIsAdmin = m => roleOf(m) === 'admin';
+const me =() => memberById(S.allowed?.memberId) || S.members.find(m => m.email === S.email);
+const myName = () => me()?.name || S.allowed?.name || S.user?.displayName || S.email;
+const activeMembers = () => S.members.filter(m => m.active !== false).sort(byOrder);
+function visibleMembers() {
+  const f = S.filters;
+  return S.members.filter(m => (m.active !== false || f.showInactive) && !f.hiddenMembers.includes(m.id)).sort(byOrder);
+}
+const passCat = e => !S.filters.hiddenCats.includes(e.category);
+const saveFilters = () => store.set('filters', S.filters);
+const cfgRef = () => doc(db, 'config', 'app');
+const stampNew = () => ({ createdBy: S.user.email, createdByName: myName(), createdAt: serverTimestamp(), ...stampUpd() });
+const stampUpd = () => ({ updatedBy: S.user.email, updatedByName: myName(), updatedAt: serverTimestamp() });
+
+function normalizeConfig(c = {}) {
+  const sl = c.slots || {};
+  return {
+    slots: { am: { ...DEFAULT_SLOTS.am, ...sl.am }, lunch: { ...DEFAULT_SLOTS.lunch, ...sl.lunch }, pm: { ...DEFAULT_SLOTS.pm, ...sl.pm } },
+    categories: (c.categories?.length ? c.categories : DEFAULT_CATEGORIES).slice().sort(byOrder),
+    companyHolidays: c.companyHolidays || [],
+  };
+}
+
+// =====================================================================
+//  起動・認証
+// =====================================================================
+init();
+function init() {
+  document.title = APP_TITLE;
+  $('#appTitle').textContent = APP_TITLE;
+  bindGlobalEvents();
+  if (!FIREBASE_CONFIG.apiKey || FIREBASE_CONFIG.apiKey.startsWith('YOUR_')) {
+    showScreen(`<h2>Firebase の設定が必要です</h2><p>index.html 冒頭の <code>FIREBASE_CONFIG</code> に、Firebase コンソールで発行した設定値を貼り付けてください。手順は SETUP.md を参照してください。</p>`);
+    return;
+  }
+  app = initializeApp(FIREBASE_CONFIG);
+  auth = getAuth(app);
+  auth.languageCode = 'ja'; // 確認メール・再設定メールを日本語で送る
+  db = getFirestore(app);
+  onAuthStateChanged(auth, handleAuth);
+}
+
+function showScreen(html) {
+  $('#app').hidden = true;
+  const sc = $('#screen');
+  sc.hidden = false;
+  sc.innerHTML = `<div class="card">${html}</div>`;
+}
+const logoutBtn = '<p><button data-act="logout">ログアウト</button></p>';
+
+async function handleAuth(user) {
+  stopListeners();
+  if (!user) { showLogin(); return; }
+  S.user = user;
+  S.email = (user.email || '').toLowerCase();
+  if (!user.emailVerified) { showVerify(); return; }
+  showScreen('<p class="muted">読み込み中…</p>');
+  let allowed = null;
+  try { allowed = await getDoc(doc(db, 'allowedUsers', S.email)); } catch (e) { console.warn(e); }
+  if (!allowed?.exists()) {
+    showScreen(`<h2>メンバーとして登録されていません</h2><p>${esc(user.email)} はまだメンバーとして登録されていないため、予定を表示できません。<br><b>管理者に登録を依頼してください。</b></p><p class="hint">登録が済んだら、もう一度ログインしてください。</p>${logoutBtn}`);
+    return;
+  }
+  S.allowed = allowed.data();
+  let cfg;
+  try { cfg = await getDoc(cfgRef()); } catch (e) { showScreen(`<h2>読み込みに失敗しました</h2><p>${esc(e.code || e.message)}</p>${logoutBtn}`); return; }
+  if (!cfg.exists()) {
+    if (isAdmin()) showSetup();
+    else showScreen(`<h2>初期設定が完了していません</h2><p>管理者が初期設定を行うまでお待ちください。</p>${logoutBtn}`);
+    return;
+  }
+  S.config = normalizeConfig(cfg.data());
+  startApp();
+}
+
+// ---------- ログイン（メール／パスワード） ----------
+const AUTH_MODES = {
+  login:    { tab: 'ログイン', button: 'ログイン', desc: '社内メールアドレスと、初回登録で設定したパスワードでログインしてください。' },
+  register: { tab: '初回登録', button: '登録して確認メールを送る', desc: 'はじめて使う方は、社内メールアドレスとパスワードを登録してください。登録後に確認メールが届きます。' },
+  reset:    { tab: 'パスワード再設定', button: '再設定メールを送る', desc: '登録済みのメールアドレスを入力すると、パスワード再設定用のメールを送信します。' },
+};
+const AUTH_ERRORS = {
+  'auth/invalid-credential': 'メールアドレスまたはパスワードが正しくありません',
+  'auth/invalid-login-credentials': 'メールアドレスまたはパスワードが正しくありません',
+  'auth/wrong-password': 'メールアドレスまたはパスワードが正しくありません',
+  'auth/user-not-found': 'メールアドレスまたはパスワードが正しくありません',
+  'auth/email-already-in-use': 'このメールアドレスはすでに登録されています。「ログイン」から入るか、パスワードを忘れた場合は「パスワード再設定」を使ってください',
+  'auth/weak-password': 'パスワードは8文字以上で設定してください',
+  'auth/password-does-not-meet-requirements': 'パスワードが要件を満たしていません',
+  'auth/invalid-email': 'メールアドレスの形式が正しくありません',
+  'auth/too-many-requests': '試行回数が多すぎます。しばらく待ってからやり直してください',
+  'auth/network-request-failed': 'ネットワークに接続できません',
+  'auth/user-disabled': 'このアカウントは無効化されています。管理者に連絡してください',
+  'auth/operation-not-allowed': 'メール／パスワードでのログインが有効になっていません（Firebase の設定を確認してください）',
+};
+const authErrorMessage = e => AUTH_ERRORS[e.code] || '処理に失敗しました：' + (e.code || e.message);
+const PASSWORD_MIN = 8;
+
+function showLogin(mode = 'login') {
+  const m = AUTH_MODES[mode];
+  const pw = mode === 'reset' ? '' : `<div class="row"><label>パスワード</label><div class="fld"><input type="password" name="password" minlength="${PASSWORD_MIN}" autocomplete="${mode === 'register' ? 'new-password' : 'current-password'}" required>${mode === 'register' ? `<p class="hint">${PASSWORD_MIN}文字以上で設定してください。社内システムと同じパスワードは使わないでください。</p>` : ''}</div></div>`;
+  const pw2 = mode === 'register' ? '<div class="row"><label>パスワード（確認）</label><div class="fld"><input type="password" name="password2" autocomplete="new-password" required></div></div>' : '';
+  showScreen(`<h1>${esc(APP_TITLE)}</h1>
+    <nav class="subtabs auth-tabs">${Object.entries(AUTH_MODES).map(([k, v]) => `<button data-act="auth-mode" data-mode="${k}" class="${k === mode ? 'active' : ''}">${v.tab}</button>`).join('')}</nav>
+    <form id="authForm" class="auth-form" novalidate>
+      <p class="hint">${m.desc}</p>
+      <div class="row"><label>メールアドレス</label><div class="fld"><input type="email" name="email" autocomplete="username" value="${esc(S.loginEmail || '')}" required ${S.loginEmail ? '' : 'autofocus'}></div></div>
+      ${pw}${pw2}
+      <p class="error"></p><p class="ok-msg"></p>
+      <div class="actions"><span class="spacer"></span><button type="submit" class="primary">${m.button}</button></div>
+    </form>`);
+  const f = $('#authForm');
+  (S.loginEmail && f.elements.password ? f.elements.password : f.elements.email).focus();
+  f.addEventListener('submit', e => { e.preventDefault(); guarded(f, () => authSubmit(mode, f)); });
+}
+
+async function authSubmit(mode, f) {
+  const E = f.elements;
+  const email = E.email.value.trim().toLowerCase(); // ルールの照合のため小文字に統一
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new UserError('メールアドレスを正しく入力してください');
+  S.loginEmail = email;
+  try {
+    if (mode === 'reset') {
+      await sendPasswordResetEmail(auth, email);
+      $('.ok-msg', f).textContent = '登録済みのアドレスであれば、パスワード再設定メールを送信しました。届かない場合は迷惑メールフォルダも確認してください。';
+      return;
+    }
+    const pw = E.password.value;
+    if (pw.length < PASSWORD_MIN) throw new UserError(`パスワードは${PASSWORD_MIN}文字以上で入力してください`);
+    if (mode === 'register') {
+      if (pw !== E.password2.value) throw new UserError('確認用のパスワードが一致しません');
+      const cred = await createUserWithEmailAndPassword(auth, email, pw);
+      await sendEmailVerification(cred.user);
+    } else {
+      await signInWithEmailAndPassword(auth, email, pw);
+    }
+  } catch (e) {
+    throw e instanceof UserError ? e : new UserError(authErrorMessage(e));
+  }
+}
+
+function showVerify() {
+  showScreen(`<h2>メールアドレスの確認</h2>
+    <p>${esc(S.user.email)} 宛てに確認メールを送信しました。メール内のリンクを開いて確認を完了してから、「確認を完了した」を押してください。</p>
+    <p class="hint">メールが見当たらない場合は、Outlook の「迷惑メール」フォルダを確認してください。差出人は noreply@${esc(FIREBASE_CONFIG.authDomain)} です。</p>
+    <p><button class="primary" data-act="verify-check">確認を完了した</button> <button data-act="verify-resend">確認メールを再送</button> <button data-act="logout">ログアウト</button></p>`);
+}
+async function checkVerified() {
+  const u = auth.currentUser;
+  if (!u) return;
+  await u.reload();
+  if (!u.emailVerified) throw new UserError('まだ確認が完了していません。確認メール内のリンクを開いてください。');
+  await u.getIdToken(true); // email_verified を含む新しいトークンに更新（セキュリティルールで必須）
+  await handleAuth(u);
+}
+async function resendVerify() {
+  try { await sendEmailVerification(auth.currentUser); toast('確認メールを再送しました'); }
+  catch (e) { throw new UserError(authErrorMessage(e)); }
+}
+
+function onErr(e) { console.error(e); toast('データの読み込みに失敗しました：' + (e.code || e.message), 'error'); }
+function listen(u) { S.unsubs.push(u); }
+function stopListeners() {
+  S.unsubs.forEach(u => u()); S.unsubs = [];
+  S.unsubRange?.(); S.unsubRange = null; S.rangeKey = null;
+}
+const rangeQuery = (start, end) => query(collection(db, 'events'), where('date', '>=', start), where('date', '<=', end));
+const docsOf = snap => snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+function startApp() {
+  $('#screen').hidden = true;
+  $('#app').hidden = false;
+  S.view = store.get('view', innerWidth < 768 ? 'list' : 'month');
+  if (!['month', 'week', 'list'].includes(S.view)) S.view = 'month';
+  S.cursor = new Date();
+  const startRole = myRole();
+  listen(onSnapshot(doc(db, 'allowedUsers', S.email), snap => {
+    if (!snap.exists()) { toast('ログイン権限が取り消されました', 'error'); signOut(auth); return; }
+    S.allowed = snap.data();
+    if (myRole() !== startRole) { toast(`権限が「${ROLE_LABEL[myRole()]}」に変更されました`); handleAuth(S.user); return; } // 読み込み対象を切り替えるため再起動
+    renderAll();
+  }, onErr));
+  if (isAdmin()) {
+    listen(onSnapshot(collection(db, 'viewers'), snap => { S.viewers = docsOf(snap); renderAll(); }, onErr));
+    checkMigration();
+  }
+  listen(onSnapshot(cfgRef(), snap => { if (snap.exists()) { S.config = normalizeConfig(snap.data()); holidayCache.clear(); renderAll(); } }, onErr));
+  listen(onSnapshot(query(collection(db, 'members'), orderBy('order')), snap => { S.members = docsOf(snap); renderAll(); }, onErr));
+  listen(onSnapshot(collection(db, 'recurrences'), snap => { S.recurrences = docsOf(snap); renderAll(); }, onErr));
+  const ws = startOfWeek(new Date());
+  listen(onSnapshot(rangeQuery(ymd(ws), ymd(addDays(ws, 6))), snap => { S.weekEvents = docsOf(snap); renderAll(); }, onErr));
+  subscribeRange();
+  renderAll();
+}
+
+function viewRange() {
+  if (S.view === 'week') { const ws = startOfWeek(S.cursor); return { start: ymd(ws), end: ymd(addDays(ws, 6)) }; }
+  const y = S.cursor.getFullYear(), m = S.cursor.getMonth();
+  return { start: ymd(new Date(y, m, 1)), end: ymd(new Date(y, m + 1, 0)) };
+}
+function subscribeRange() {
+  const { start, end } = viewRange();
+  const key = start + '_' + end;
+  if (key === S.rangeKey) return;
+  S.rangeKey = key;
+  S.unsubRange?.();
+  S.events = [];
+  S.unsubRange = onSnapshot(rangeQuery(start, end), snap => { S.events = docsOf(snap); renderAll(); }, onErr);
+}
+
+// =====================================================================
+//  描画
+// =====================================================================
+// 複数のリアルタイム更新をまとめて1回だけ描画する（rAF は非表示タブで止まるため setTimeout を使う）
+let renderTimer = 0;
+function renderAll() { if (!renderTimer) renderTimer = setTimeout(() => { renderTimer = 0; doRender(); }, 0); }
+function doRender() {
+  if (!S.config || $('#app').hidden) return;
+  if (S.view === 'settings' && isViewer()) S.view = 'month';
+  $('#userName').innerHTML = esc(myName()) + (isAdmin() ? '（管理者）' : '') + (isViewer() ? '<span class="badge view-only">閲覧専用</span>' : '');
+  $('.app-header [data-view=settings]').hidden = isViewer();
+  document.body.classList.toggle('readonly', !canEdit());
+  $$('[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === S.view && b.closest('.app-header')));
+  const f = S.filters;
+  const filtering = f.hiddenCats.length || f.hiddenMembers.length || f.showInactive;
+  $('#btnFilter').textContent = filtering ? '絞り込み（適用中）' : '絞り込み';
+  $('#btnFilter').classList.toggle('filter-on', !!filtering);
+  renderSummary();
+  renderLegend();
+  if (S.view === 'month') renderMonth();
+  else if (S.view === 'week') renderWeek();
+  else if (S.view === 'list') renderList();
+  else renderSettings();
+  if (!$('#filterPanel').hidden) renderFilter();
+}
+
+function setViewHtml(html, key) {
+  const old = $('#view .grid-wrap');
+  const keep = old && S.lastViewKey === key ? { t: old.scrollTop, l: old.scrollLeft } : null;
+  $('#view').innerHTML = html;
+  S.lastViewKey = key;
+  const nw = $('#view .grid-wrap');
+  if (keep && nw) { nw.scrollTop = keep.t; nw.scrollLeft = keep.l; }
+  return !keep;
+}
+
+function navHtml(title, unit, extra = '') {
+  return `<div class="nav"><button data-act="prev">◀ 前${unit}</button><h2><span class="print-only">${esc(APP_TITLE)}　</span>${title}</h2><button data-act="next">翌${unit} ▶</button><button data-act="today">今日</button></div><div class="tb-right">${extra}</div>`;
+}
+
+function indexEvents(list) {
+  const m = new Map();
+  for (const e of list) {
+    if (!passCat(e)) continue;
+    const k = e.targetId + '|' + e.date;
+    if (!m.has(k)) m.set(k, []);
+    m.get(k).push(e);
+  }
+  for (const arr of m.values()) arr.sort(cmpEvent);
+  return m;
+}
+function cmpEvent(a, b) {
+  return (SLOT_RANK[a.slot] - SLOT_RANK[b.slot]) || ((catById(a.category)?.order ?? 99) - (catById(b.category)?.order ?? 99)) || (a.title || '').localeCompare(b.title || '', 'ja');
+}
+// 終日の予定は午前・午後の両方のセルに表示する
+const cellEvents = (idx, t, d, s) => (idx.get(t + '|' + d) || []).filter(e => e.slot === s || e.slot === 'allday');
+
+function chipHtml(e, opt = {}) {
+  const c = catById(e.category);
+  const color = c?.color || '#888';
+  const tip = [`[${c?.name || '?'}] ${e.title || ''}`, e.location && `場所：${e.location}`, e.theme && `関連テーマ：${e.theme}`,
+    e.recurrenceId && '（繰り返し予定）', e.updatedByName && `更新：${e.updatedByName} ${fmtTs(e.updatedAt)}`].filter(Boolean).join('\n');
+  const slotTag = opt.slot ? `<b class="slot-tag">${SLOT_LABEL[e.slot]}</b>` : (e.slot === 'allday' ? '<b class="slot-tag">終日</b>' : '');
+  const who = opt.who ? `<b>${esc(memberName(e.targetId))}</b> ` : '';
+  const body = e.title ? `<span class="cat-tag">${esc(c?.name || '')}</span>${esc(e.title)}` : esc(c?.name || '');
+  return `<span class="chip${e.slot === 'allday' ? ' allday' : ''}" data-ev="${e.id}" style="--c:${color}" title="${esc(tip)}">${slotTag}${who}${body}${e.location ? `<span class="loc">@${esc(e.location)}</span>` : ''}${e.recurrenceId ? '<span class="rep" title="繰り返し予定">↻</span>' : ''}</span>`;
+}
+const cellHtml = (idx, t, d, s, cls = '') => `<td class="cell ${cls}" data-date="${d}" data-slot="${s}" data-target="${t}">${cellEvents(idx, t, d, s).map(e => chipHtml(e)).join('')}</td>`;
+const emptyHtml = () => '<div class="card"><p class="muted">表示するメンバーがいません。絞り込み条件を確認するか、設定画面からメンバーを追加してください。</p></div>';
+
+// ---------- サマリー（今日の不在者・今週の予定） ----------
+function renderSummary() {
+  const el = $('#summary');
+  if (S.view === 'settings') { el.hidden = true; return; }
+  el.hidden = false;
+  const today = todayStr();
+  const absCats = new Set(S.config.categories.filter(c => c.isAbsence).map(c => c.id));
+  const byMember = new Map();
+  for (const e of S.weekEvents.filter(e => e.date === today && absCats.has(e.category)).sort(cmpEvent)) {
+    const m = memberById(e.targetId);
+    if (!m || m.active === false) continue;
+    if (!byMember.has(m.id)) byMember.set(m.id, []);
+    byMember.get(m.id).push(e);
+  }
+  const absHtml = byMember.size
+    ? [...byMember.entries()].sort((a, b) => byOrder(memberById(a[0]), memberById(b[0]))).map(([id, evs]) => {
+        const m = memberById(id);
+        return `<span class="abs-item" style="--c:${m.color}"><b>${esc(m.name)}</b>：${evs.map(e => `${esc(catName(e.category))}（${SLOT_LABEL[e.slot]}）${e.title ? ' ' + esc(e.title) : ''}`).join('、')}</span>`;
+      }).join('')
+    : '<span class="muted">なし</span>';
+
+  const ws = startOfWeek(new Date());
+  const days = [...Array(7)].map((_, i) => ymd(addDays(ws, i)));
+  const vis = new Set(visibleMembers().map(m => m.id));
+  const order = id => memberById(id)?.order ?? 0;
+  const wk = days.map(d => {
+    const evs = S.weekEvents.filter(e => e.date === d && passCat(e) && vis.has(e.targetId))
+      .sort((a, b) => order(a.targetId) - order(b.targetId) || cmpEvent(a, b));
+    if (!evs.length) return '';
+    return `<div class="wk-day ${dayKind(d)}"><span class="d">${fmtMD(d)}</span><div class="items">${evs.map(e => chipHtml(e, { slot: true, who: true })).join('')}</div></div>`;
+  }).join('');
+
+  const exp = expiringRecurrences();
+  el.innerHTML = `
+    <div class="card"><h3>今日の不在者（${fmtMD(today)}）</h3><div class="abs-list">${absHtml}</div></div>
+    <div class="card"><details id="wkDetails" ${store.get('wkOpen', true) ? 'open' : ''}><summary>今週の予定（${fmtMD(days[0])}〜${fmtMD(days[6])}）</summary>
+      <div class="wk-list">${wk || '<p class="muted">予定はありません</p>'}</div></details></div>
+    ${isAdmin() && needsMigration() ? `<div class="notice">旧形式の権限データ（isAdmin）が ${S.legacyAllowed.length + legacyMembers().length} 件あります。役割（role）形式への移行を実行してください。<button class="small" data-act="migrate">移行する</button></div>` : ''}
+    ${canEdit() && exp.length ? `<div class="notice">終了日が${EXPIRY_WARN_DAYS}日以内の繰り返し予定が ${exp.length} 件あります。<button class="small" data-act="goto-rec">確認・延長する</button></div>` : ''}`;
+}
+
+function renderLegend() {
+  const el = $('#legend');
+  if (S.view === 'settings') { el.hidden = true; return; }
+  el.hidden = false;
+  const sl = S.config.slots;
+  el.innerHTML = cats().filter(c => !c.hidden).map(c =>
+    `<button class="legend-item${S.filters.hiddenCats.includes(c.id) ? ' off' : ''}" data-act="toggle-cat" data-id="${c.id}" style="--c:${c.color}" title="クリックで表示／非表示を切り替え">${esc(c.name)}</button>`).join('')
+    + `<span class="slot-info">午前 ${fmtTime(sl.am.start)}〜${fmtTime(sl.am.end)}　昼休み ${fmtTime(sl.lunch.start)}〜${fmtTime(sl.lunch.end)}　午後 ${fmtTime(sl.pm.start)}〜${fmtTime(sl.pm.end)}</span>`;
+}
+
+// ---------- 月表示 ----------
+function renderMonth() {
+  const { start, end } = viewRange();
+  const cur = parseYmd(start);
+  $('#toolbar').innerHTML = navHtml(`${cur.getFullYear()}年${cur.getMonth() + 1}月`, '月');
+  const cols = visibleMembers();
+  if (!cols.length) { setViewHtml(emptyHtml(), 'empty'); return; }
+  const idx = indexEvents(S.events);
+  const today = todayStr();
+  let h = `<div class="grid-wrap"><table class="grid month" style="--cols:${cols.length}"><thead><tr><th class="c-date">日付</th><th class="c-slot">区分</th>${cols.map(m => `<th class="c-member" style="--mc:${m.color}">${esc(m.name)}${m.active === false ? '<small class="muted">（非表示）</small>' : ''}</th>`).join('')}</tr></thead><tbody>`;
+  for (const d of dateRange(start, end)) {
+    const hol = holidayName(d);
+    const cls = `${dayKind(d)}${d === today ? ' today' : ''}`;
+    h += `<tr class="am ${cls}"${d === today ? ' id="todayRow"' : ''}><td class="c-date" rowspan="2">${fmtMD(d)}${hol ? `<small class="hol">${esc(hol)}</small>` : ''}</td><td class="c-slot">午前</td>${cols.map(m => cellHtml(idx, m.id, d, 'am')).join('')}</tr>`;
+    h += `<tr class="pm ${cls}"><td class="c-slot">午後</td>${cols.map(m => cellHtml(idx, m.id, d, 'pm')).join('')}</tr>`;
+  }
+  h += '</tbody></table></div>';
+  if (setViewHtml(h, 'month' + start)) {
+    const row = $('#todayRow'), wrap = $('#view .grid-wrap');
+    if (row && wrap) wrap.scrollTop = row.getBoundingClientRect().top - wrap.getBoundingClientRect().top - wrap.querySelector('thead').offsetHeight - 4;
+  }
+}
+
+// ---------- 週表示 ----------
+function renderWeek() {
+  const ws = startOfWeek(S.cursor);
+  const n = S.showWeekend ? 7 : 5;
+  const days = [...Array(n)].map((_, i) => ymd(addDays(ws, i)));
+  $('#toolbar').innerHTML = navHtml(`${fmtYMD(days[0])} 〜 ${fmtMD(days[n - 1])}`, '週',
+    `<label class="inline"><input type="checkbox" data-act="toggle-weekend" ${S.showWeekend ? 'checked' : ''}> 土日を表示</label><button data-act="print">印刷</button>`);
+  const cols = visibleMembers();
+  if (!cols.length) { setViewHtml(emptyHtml(), 'empty'); return; }
+  const idx = indexEvents(S.events);
+  const today = todayStr();
+  let h = `<div class="grid-wrap"><table class="grid week${cols.length > 8 ? ' dense' : ''}" style="--days:${n}"><thead><tr><th class="c-name" rowspan="2">メンバー</th>`
+    + days.map(d => { const hol = holidayName(d); return `<th colspan="2" class="${dayKind(d)}${d === today ? ' today' : ''}">${fmtMD(d)}${hol ? `<small class="hol">${esc(hol)}</small>` : ''}</th>`; }).join('')
+    + `</tr><tr class="sub">${days.map(d => `<th class="${dayKind(d)}">午前</th><th class="${dayKind(d)}">午後</th>`).join('')}</tr></thead><tbody>`;
+  for (const m of cols) {
+    h += `<tr><th class="c-name" style="--mc:${m.color}">${esc(m.name)}</th>${days.map(d => {
+      const k = dayKind(d) + (d === today ? ' today' : '');
+      return cellHtml(idx, m.id, d, 'am', 'am ' + k) + cellHtml(idx, m.id, d, 'pm', 'pm ' + k);
+    }).join('')}</tr>`;
+  }
+  h += '</tbody></table></div>';
+  setViewHtml(h, 'week' + days[0] + n);
+}
+
+// ---------- リスト表示（スマホ向け） ----------
+function renderList() {
+  const { start, end } = viewRange();
+  const cur = parseYmd(start);
+  $('#toolbar').innerHTML = navHtml(`${cur.getFullYear()}年${cur.getMonth() + 1}月`, '月');
+  const cols = visibleMembers();
+  const idx = indexEvents(S.events);
+  const today = todayStr();
+  let h = '<div class="list-view">';
+  for (const d of dateRange(start, end)) {
+    const hol = holidayName(d);
+    const rows = cols.map(m => {
+      const evs = idx.get(m.id + '|' + d) || [];
+      return evs.length ? `<div class="lv-row"><span class="lv-name" style="--mc:${m.color}">${esc(m.name)}</span><div class="lv-evs">${evs.map(e => chipHtml(e, { slot: true })).join('')}</div></div>` : '';
+    }).join('');
+    h += `<section class="day-card ${dayKind(d)}${d === today ? ' today' : ''}"${d === today ? ' id="todayCard"' : ''}><header>${fmtMD(d)}${hol ? `<small class="hol">${esc(hol)}</small>` : ''}${canEdit() ? `<button class="small" data-act="add-day" data-date="${d}">＋ 追加</button>` : ''}</header>${rows || '<p class="muted" style="margin:.2rem 0">予定なし</p>'}</section>`;
+  }
+  h += '</div>';
+  const key = 'list' + start;
+  const fresh = S.lastViewKey !== key;
+  setViewHtml(h, key);
+  if (fresh) $('#todayCard')?.scrollIntoView({ block: 'start' });
+}
+
+// =====================================================================
+//  セル選択（ドラッグで複数日・複数メンバー）
+// =====================================================================
+let sel = null, lastPointer = 'mouse';
+const cellInfo = td => ({ date: td.dataset.date, slot: td.dataset.slot, target: td.dataset.target });
+const linIdx = c => dayNum(c.date) * 2 + (c.slot === 'pm' ? 1 : 0);
+function selBounds() {
+  const order = visibleMembers().map(m => m.id);
+  const t1 = order.indexOf(sel.a.target), t2 = order.indexOf(sel.b.target);
+  const l1 = linIdx(sel.a), l2 = linIdx(sel.b);
+  return { order, tMin: Math.min(t1, t2), tMax: Math.max(t1, t2), lMin: Math.min(l1, l2), lMax: Math.max(l1, l2) };
+}
+function paintSel() {
+  const b = selBounds();
+  $$('#view td.cell').forEach(td => {
+    const c = cellInfo(td), ti = b.order.indexOf(c.target), li = linIdx(c);
+    td.classList.toggle('sel', ti >= b.tMin && ti <= b.tMax && li >= b.lMin && li <= b.lMax);
+  });
+}
+function finishSel() {
+  const b = selBounds();
+  sel = null;
+  $$('#view td.cell.sel').forEach(td => td.classList.remove('sel'));
+  const from = numToYmd(Math.floor(b.lMin / 2)), to = numToYmd(Math.floor(b.lMax / 2));
+  const sSlot = b.lMin % 2 ? 'pm' : 'am', eSlot = b.lMax % 2 ? 'pm' : 'am';
+  let slot;
+  if (b.lMin === b.lMax) slot = sSlot;
+  else if (from === to) slot = 'allday';
+  else slot = sSlot === eSlot ? sSlot : 'allday';
+  openEventDialog({ mode: 'new', targets: b.order.slice(b.tMin, b.tMax + 1), from, to, slot });
+}
+
+// =====================================================================
+//  イベント結線
+// =====================================================================
+function bindGlobalEvents() {
+  const view = $('#view');
+  view.addEventListener('pointerdown', e => {
+    lastPointer = e.pointerType;
+    if (!canEdit()) return; // 閲覧者はドラッグ選択・新規登録不可
+    if (e.pointerType !== 'mouse' || e.button !== 0 || e.target.closest('.chip')) return;
+    const td = e.target.closest('td.cell');
+    if (!td) return;
+    e.preventDefault();
+    sel = { a: cellInfo(td), b: cellInfo(td) };
+    paintSel();
+  });
+  view.addEventListener('pointerover', e => {
+    if (!sel) return;
+    const td = e.target.closest('td.cell');
+    if (!td) return;
+    const c = cellInfo(td);
+    if (c.date === sel.b.date && c.slot === sel.b.slot && c.target === sel.b.target) return;
+    sel.b = c;
+    paintSel();
+  });
+  document.addEventListener('pointerup', () => { if (sel) finishSel(); });
+  view.addEventListener('click', e => { // タッチ操作はタップで1セル入力
+    if (!canEdit() || lastPointer === 'mouse' || e.target.closest('.chip')) return;
+    const td = e.target.closest('td.cell');
+    if (!td) return;
+    const c = cellInfo(td);
+    openEventDialog({ mode: 'new', targets: [c.target], from: c.date, to: c.date, slot: c.slot });
+  });
+
+  document.addEventListener('click', e => {
+    const chip = e.target.closest('[data-ev]');
+    if (chip && !e.target.closest('dialog')) { openEditById(chip.dataset.ev); return; }
+    const v = e.target.closest('[data-view]');
+    if (v) { setView(v.dataset.view); return; }
+    const a = e.target.closest('[data-act]');
+    if (a && !a.matches('input,select')) { handleAct(a.dataset.act, a); return; }
+    const panel = $('#filterPanel');
+    if (!panel.hidden && !e.target.closest('#filterPanel') && !e.target.closest('#btnFilter')) panel.hidden = true;
+  });
+  document.addEventListener('change', e => {
+    const a = e.target.closest('[data-act]');
+    if (a && a.matches('input')) handleChange(a.dataset.act, a);
+  });
+  document.addEventListener('toggle', e => { if (e.target.id === 'wkDetails') store.set('wkOpen', e.target.open); }, true);
+  $('#filterPanel').addEventListener('change', onFilterChange);
+  const dlg = $('#dlg');
+  dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+}
+
+function setView(v) {
+  if (v === 'week' && S.view !== 'week') {
+    const t = new Date();
+    if (S.cursor.getFullYear() === t.getFullYear() && S.cursor.getMonth() === t.getMonth()) S.cursor = t;
+  }
+  S.view = v;
+  if (v !== 'settings') store.set('view', v);
+  if (v === 'settings' && S.settingsTab === 'history' && !S.historyLoaded) loadHistory();
+  subscribeRange();
+  renderAll();
+}
+function nav(dir) {
+  S.cursor = S.view === 'week' ? addDays(S.cursor, 7 * dir) : new Date(S.cursor.getFullYear(), S.cursor.getMonth() + dir, 1);
+  subscribeRange();
+  renderAll();
+}
+
+function handleAct(act, el) {
+  const id = el.dataset.id;
+  switch (act) {
+    case 'auth-mode': S.loginEmail = $('#authForm [name=email]')?.value.trim() || S.loginEmail; return showLogin(el.dataset.mode);
+    case 'verify-check': return guardedAction(checkVerified);
+    case 'verify-resend': return guardedAction(resendVerify);
+    case 'logout': return signOut(auth);
+    case 'prev': return nav(-1);
+    case 'next': return nav(1);
+    case 'today': S.cursor = new Date(); S.lastViewKey = null; subscribeRange(); return renderAll();
+    case 'filter': { const p = $('#filterPanel'); p.hidden = !p.hidden; if (!p.hidden) renderFilter(); return; }
+    case 'filter-reset': S.filters = { hiddenCats: [], hiddenMembers: [], showInactive: false }; saveFilters(); return renderAll();
+    case 'filter-close': $('#filterPanel').hidden = true; return;
+    case 'toggle-cat': {
+      const f = S.filters;
+      f.hiddenCats = f.hiddenCats.includes(id) ? f.hiddenCats.filter(x => x !== id) : [...f.hiddenCats, id];
+      saveFilters(); return renderAll();
+    }
+    case 'csv': return exportCsv();
+    case 'print': return window.print();
+    case 'add-day': if (!canEdit()) return; return openEventDialog({ mode: 'new', targets: [me()?.id || visibleMembers()[0]?.id].filter(Boolean), from: el.dataset.date, to: el.dataset.date, slot: 'am' });
+    case 'goto-rec': S.settingsTab = 'rec'; return setView('settings');
+    case 'settings-tab':
+      S.settingsTab = el.dataset.tab;
+      if (S.settingsTab === 'history' && !S.historyLoaded) loadHistory();
+      return renderAll();
+    case 'rec-extend': return openExtendDialog(S.recurrences.find(r => r.id === id));
+    case 'rec-stop': return guardedAction(() => stopRecurrence(S.recurrences.find(r => r.id === id)));
+    case 'hist-reload': return loadHistory();
+    case 'hist-del': return guardedAction(() => deleteHistory(id));
+    case 'member-add': return openMemberDialog(null);
+    case 'member-edit': return openMemberDialog(memberById(id));
+    case 'migrate': return guardedAction(runMigration);
+    case 'viewer-add': return openViewerDialog(null);
+    case 'viewer-edit': return openViewerDialog(S.viewers.find(v => v.id === id));
+    case 'viewer-del': return guardedAction(() => deleteViewer(S.viewers.find(v => v.id === id)));
+    case 'member-toggle': return guardedAction(() => toggleMemberActive(memberById(id)));
+    case 'cat-add': return addCatRow();
+    case 'hol-del': return guardedAction(() => removeCompanyHoliday(el.dataset.date));
+  }
+}
+function handleChange(act, el) {
+  if (act === 'toggle-weekend') { S.showWeekend = el.checked; store.set('showWeekend', S.showWeekend); renderAll(); }
+  else if (act === 'toggle-inactive-settings') { S.showInactiveSettings = el.checked; renderAll(); }
+}
+
+// ---------- 絞り込み ----------
+function renderFilter() {
+  const f = S.filters;
+  const ms = S.members.filter(m => m.active !== false || f.showInactive).sort(byOrder);
+  $('#filterPanel').innerHTML = `
+    <h4>種別</h4><div class="opts">${cats().map(c => `<label class="inline"><input type="checkbox" data-f="cat" value="${c.id}" ${f.hiddenCats.includes(c.id) ? '' : 'checked'}> <span class="swatch" style="background:${c.color}"></span>${esc(c.name)}</label>`).join('')}</div>
+    <h4>メンバー</h4><div class="opts">${ms.map(m => `<label class="inline"><input type="checkbox" data-f="member" value="${m.id}" ${f.hiddenMembers.includes(m.id) ? '' : 'checked'}> ${esc(m.name)}${m.active === false ? '（非表示）' : ''}</label>`).join('')}</div>
+    <div class="opts"><label class="inline"><input type="checkbox" data-f="inactive" ${f.showInactive ? 'checked' : ''}> 非表示のメンバーも表示する（過去の予定の確認用）</label></div>
+    <div class="foot"><button data-act="filter-reset">すべて表示</button><button class="primary" data-act="filter-close">閉じる</button></div>`;
+}
+function onFilterChange(e) {
+  const i = e.target, f = S.filters;
+  const toggle = (arr, v, show) => show ? arr.filter(x => x !== v) : [...new Set([...arr, v])];
+  if (i.dataset.f === 'cat') f.hiddenCats = toggle(f.hiddenCats, i.value, i.checked);
+  else if (i.dataset.f === 'member') f.hiddenMembers = toggle(f.hiddenMembers, i.value, i.checked);
+  else if (i.dataset.f === 'inactive') f.showInactive = i.checked;
+  saveFilters();
+  renderAll();
+}
+
+// =====================================================================
+//  ダイアログ・保存処理の共通部
+// =====================================================================
+function openDialog(html) {
+  const d = $('#dlg');
+  d.innerHTML = html;
+  $$('[data-close]', d).forEach(b => b.addEventListener('click', () => d.close()));
+  if (!d.open) d.showModal();
+  $('[autofocus]', d)?.focus();
+}
+async function guarded(form, fn) {
+  const btns = $$('button', form);
+  btns.forEach(b => b.disabled = true);
+  const err = $('.error', form);
+  if (err) err.textContent = '';
+  try {
+    const ok = await fn();
+    if (ok && $('#dlg').open && $('#dlg').contains(form)) $('#dlg').close();
+  } catch (e) {
+    if (!(e instanceof UserError)) console.error(e);
+    const msg = e instanceof UserError ? e.message : '保存に失敗しました：' + (e.code || e.message);
+    if (err) err.textContent = msg; else toast(msg, 'error');
+  } finally {
+    btns.forEach(b => b.disabled = false);
+  }
+}
+async function guardedAction(fn) {
+  try { await fn(); }
+  catch (e) { if (!(e instanceof UserError)) console.error(e); toast(e instanceof UserError ? e.message : '処理に失敗しました：' + (e.code || e.message), 'error'); }
+}
+
+// 書き込みをバッチにまとめて実行（500件制限のため450件ずつ）。履歴は最初のバッチに含める
+async function commitOps(ops, hist) {
+  const CHUNK = 450;
+  for (let i = 0; i < Math.max(ops.length, 1); i += CHUNK) {
+    const b = writeBatch(db);
+    if (i === 0 && hist) addHistory(b, hist);
+    for (const op of ops.slice(i, i + CHUNK)) {
+      if (op.type === 'set') op.merge ? b.set(op.ref, op.data, { merge: true }) : b.set(op.ref, op.data);
+      else if (op.type === 'update') b.update(op.ref, op.data);
+      else b.delete(op.ref);
+    }
+    await b.commit();
+  }
+}
+const HIST_SKIP = ['id', 'createdAt', 'updatedAt', 'createdBy', 'createdByName', 'updatedBy', 'updatedByName'];
+const cleanForHist = o => o == null ? null : Object.fromEntries(Object.entries(o).filter(([k, v]) => v !== undefined && !HIST_SKIP.includes(k)));
+function addHistory(b, h) {
+  b.set(doc(collection(db, 'history')), {
+    action: h.action, entity: h.entity, summary: h.summary,
+    docIds: (h.docIds || []).slice(0, 100),
+    before: cleanForHist(h.before), after: cleanForHist(h.after),
+    byEmail: S.user.email, byName: myName(), at: serverTimestamp(),
+  });
+}
+
+// =====================================================================
+//  予定の入力・編集
+// =====================================================================
+const EV_FIELDS = ['date', 'targetId', 'slot', 'category', 'title', 'location', 'theme'];
+const pickEv = e => Object.fromEntries(EV_FIELDS.map(k => [k, e[k] ?? '']));
+const describeEv = e => `${memberName(e.targetId)} ${fmtMD(e.date)} ${SLOT_LABEL[e.slot]} [${catName(e.category)}] ${e.title || ''}`.trim();
+const recDesc = r => `毎週${WD_ORDER.filter(w => r.weekdays.includes(w)).map(w => WD[w]).join('・')} ${SLOT_LABEL[r.slot]}`;
+
+function openEditById(id) {
+  const ev = S.events.find(e => e.id === id) || S.weekEvents.find(e => e.id === id);
+  if (!ev) return;
+  if (canEdit()) openEventDialog({ mode: 'edit', event: ev });
+  else openDetailDialog(ev);
+}
+
+// 閲覧者用：編集できない詳細表示
+function openDetailDialog(ev) {
+  const c = catById(ev.category);
+  const rec = ev.recurrenceId ? S.recurrences.find(r => r.id === ev.recurrenceId) : null;
+  const row = (label, v) => `<div class="row"><label>${label}</label><div class="fld" style="padding-top:.35rem">${v || '<span class="muted">—</span>'}</div></div>`;
+  openDialog(`<div class="form">
+    <h3>予定の詳細</h3>
+    ${row('対象', esc(memberName(ev.targetId)))}
+    ${row('日付', fmtYMD(ev.date))}
+    ${row('区分', SLOT_LABEL[ev.slot])}
+    ${row('種別', c ? `<span class="swatch" style="background:${c.color}"></span> ${esc(c.name)}` : '')}
+    ${row('内容', esc(ev.title))}
+    ${row('場所', esc(ev.location))}
+    ${row('関連テーマ', esc(ev.theme))}
+    ${ev.recurrenceId ? row('繰り返し', rec ? esc(`${recDesc(rec)}（${fmtYMD(rec.startDate)}〜${fmtYMD(rec.endDate)}）`) : '繰り返し予定') : ''}
+    <p class="meta">最終更新：${esc(ev.updatedByName || ev.updatedBy || '')} ${fmtTs(ev.updatedAt)}</p>
+    <div class="actions"><span class="hint">閲覧専用のため編集できません</span><span class="spacer"></span><button type="button" class="primary" data-close autofocus>閉じる</button></div>
+  </div>`);
+}
+
+function openEventDialog(o) {
+  if (!canEdit()) return;
+  const isNew = o.mode === 'new';
+  const ev = isNew ? { slot: o.slot || 'am', category: '', title: '', location: '', theme: '' } : o.event;
+  const members = S.members.filter(m => m.active !== false || (!isNew && m.id === ev.targetId)).sort(byOrder);
+  if (isNew && !members.length) { toast('先に設定画面でメンバーを登録してください', 'error'); return; }
+  const groupType = isNew ? null : ev.recurrenceId ? 'rec' : ev.batchId ? 'batch' : null;
+  const rec = ev.recurrenceId ? S.recurrences.find(r => r.id === ev.recurrenceId) : null;
+  const themes = [...new Set([...S.events, ...S.weekEvents].map(e => e.theme).filter(Boolean))].sort();
+
+  const targetHtml = isNew
+    ? `<div class="member-select">${members.map(m => `<label class="mem-opt" style="--mc:${m.color}"><input type="checkbox" name="targets" value="${m.id}" ${o.targets.includes(m.id) ? 'checked' : ''}><span>${esc(m.name)}</span></label>`).join('')}</div>`
+    : `<select name="target">${members.map(m => `<option value="${m.id}" ${m.id === ev.targetId ? 'selected' : ''}>${esc(m.name)}</option>`).join('')}</select>`;
+  const dateHtml = isNew
+    ? `<div class="row"><label id="lblPeriod">期間</label><div class="fld"><input type="date" name="from" value="${o.from}" required> 〜 <input type="date" name="to" value="${o.to}" required>
+         <div id="exclWrap"><label class="inline"><input type="checkbox" name="excludeOff" ${o.from !== o.to ? 'checked' : ''}> 土日・祝日を除く</label></div></div></div>`
+    : `<div class="row"><label>日付</label><div class="fld"><input type="date" name="date" value="${ev.date}" required></div></div>`;
+  const slotHtml = ['am', 'pm', 'allday'].map(s => `<label class="inline"><input type="radio" name="slot" value="${s}" ${ev.slot === s ? 'checked' : ''}> ${SLOT_LABEL[s]}</label>`).join('');
+  const catHtml = cats().filter(c => !c.hidden || c.id === ev.category).map(c =>
+    `<label class="cat-opt" style="--c:${c.color}"><input type="radio" name="category" value="${c.id}" ${ev.category === c.id ? 'checked' : ''}><span>${esc(c.name)}</span></label>`).join('');
+  const fromWd = isNew ? parseYmd(o.from).getDay() : null;
+  const repeatHtml = isNew ? `
+    <div class="row"><label>繰り返し</label><div class="fld"><label class="inline"><input type="checkbox" name="repeat"> 毎週繰り返す</label></div></div>
+    <div id="repeatBox" hidden>
+      <div class="row"><label>曜日</label><div class="fld">${WD_ORDER.map(w => `<label class="inline"><input type="checkbox" name="wd" value="${w}" ${w === fromWd ? 'checked' : ''}> ${WD[w]}</label>`).join('')}</div></div>
+      <div class="row"><label></label><div class="fld"><label class="inline"><input type="checkbox" name="skipHolidays" checked> 祝日・会社休日はスキップ</label>
+        <p class="hint">終了日は必須です（開始日から最長1年）。終了が近づいたら設定画面の「繰り返し予定」から延長できます。</p></div></div>
+    </div>` : '';
+  let scopeHtml = '';
+  if (groupType) {
+    const info = groupType === 'rec' ? `繰り返し予定：${rec ? `${recDesc(rec)}（${fmtYMD(rec.startDate)}〜${fmtYMD(rec.endDate)}）` : 'ルールは削除済み'}` : 'まとめて登録した予定です';
+    const allVal = groupType === 'rec' ? 'future' : 'group';
+    scopeHtml = `<div class="row"><label>適用範囲</label><div class="fld"><p class="hint" style="margin-top:.35rem">${esc(info)}</p>
+      <label class="inline"><input type="radio" name="scope" value="one" checked> この予定のみ</label>
+      <label class="inline"><input type="radio" name="scope" value="${allVal}"> ${groupType === 'rec' ? 'この日以降のすべて' : '同じグループのすべて'}</label></div></div>`;
+  }
+  const meta = isNew ? '' : `<p class="meta">作成：${esc(ev.createdByName || ev.createdBy || '')} ${fmtTs(ev.createdAt)}　／　最終更新：${esc(ev.updatedByName || ev.updatedBy || '')} ${fmtTs(ev.updatedAt)}</p>`;
+
+  openDialog(`<form class="form" id="evForm" novalidate>
+    <h3>${isNew ? '予定の登録' : '予定の編集'}</h3>
+    <p class="confidential">⚠ ${CONFIDENTIAL_NOTICE}</p>
+    <div class="row"><label>対象</label><div class="fld">${targetHtml}</div></div>
+    ${dateHtml}
+    <div class="row"><label>区分</label><div class="fld">${slotHtml}</div></div>
+    <div class="row"><label>種別</label><div class="fld cat-select">${catHtml}</div></div>
+    <div class="row"><label>内容</label><div class="fld"><input type="text" name="title" maxlength="200" value="${esc(ev.title)}" placeholder="例：顧客訪問、○○テーマ実験" autofocus></div></div>
+    <div class="row"><label>場所</label><div class="fld"><select name="location"><option value="">（未選択）</option>${LOCATIONS.map(l => `<option value="${l}" ${ev.location === l ? 'selected' : ''}>${l}</option>`).join('')}</select></div></div>
+    <div class="row"><label>関連テーマ</label><div class="fld"><input type="text" name="theme" maxlength="100" value="${esc(ev.theme)}" list="themeList" placeholder="任意"><datalist id="themeList">${themes.map(t => `<option value="${esc(t)}">`).join('')}</datalist></div></div>
+    ${repeatHtml}${scopeHtml}${meta}
+    <p class="error"></p>
+    <div class="actions">${isNew ? '' : '<button type="button" class="danger" id="evDelete">削除</button>'}<span class="spacer"></span><button type="button" data-close>キャンセル</button><button type="submit" class="primary">保存</button></div>
+  </form>`);
+
+  const f = $('#evForm'), E = f.elements;
+  if (isNew) {
+    E.repeat.addEventListener('change', () => {
+      const on = E.repeat.checked;
+      $('#repeatBox').hidden = !on;
+      $('#exclWrap').hidden = on;
+      $('#lblPeriod').textContent = on ? '期間（開始〜終了）' : '期間';
+      if (on && E.to.value <= E.from.value && E.from.value) E.to.value = ymd(addDays(addMonths(parseYmd(E.from.value), 3), -1));
+    });
+  }
+  if (groupType) {
+    const upd = () => { const all = E.scope.value !== 'one'; E.date.disabled = all; E.target.disabled = all; };
+    $$('[name=scope]', f).forEach(r => r.addEventListener('change', upd));
+  }
+  f.addEventListener('submit', e => { e.preventDefault(); guarded(f, () => isNew ? saveNewEvents(f) : saveEditEvent(f, ev, groupType, rec)); });
+  $('#evDelete')?.addEventListener('click', () => guarded(f, () => deleteEvent(f, ev, groupType, rec)));
+}
+
+function readEvFields(E) {
+  const fields = { slot: E.slot.value, category: E.category.value, title: E.title.value.trim(), location: E.location.value, theme: E.theme.value.trim() };
+  if (!fields.slot) throw new UserError('区分を選んでください');
+  if (!fields.category) throw new UserError('種別を選んでください');
+  return fields;
+}
+function recurrenceDates(from, to, weekdays, skipHolidays) {
+  return dateRange(from, to).filter(d => weekdays.includes(parseYmd(d).getDay()) && !(skipHolidays && holidayName(d)));
+}
+const maxEndFrom = from => ymd(addDays(addYears(parseYmd(from), 1), -1));
+
+async function saveNewEvents(f) {
+  const E = f.elements;
+  const targets = $$('[name=targets]:checked', f).map(i => i.value);
+  const from = E.from.value, to = E.to.value;
+  if (!targets.length) throw new UserError('対象のメンバーを選んでください');
+  if (!from || !to) throw new UserError('期間を入力してください');
+  if (to < from) throw new UserError('終了日は開始日以降にしてください');
+  const fields = readEvFields(E);
+  const maxEnd = maxEndFrom(from);
+  if (to > maxEnd) throw new UserError(`期間は最長1年です（${fmtYMD(maxEnd)} まで）`);
+
+  const ops = [];
+  let recId = null, dates, weekdays = [];
+  if (E.repeat.checked) {
+    weekdays = $$('[name=wd]:checked', f).map(i => +i.value);
+    if (!weekdays.length) throw new UserError('繰り返す曜日を選んでください');
+    const skipHolidays = E.skipHolidays.checked;
+    dates = recurrenceDates(from, to, weekdays, skipHolidays);
+    if (!dates.length) throw new UserError('条件に合う日がありません');
+    const recRef = doc(collection(db, 'recurrences'));
+    recId = recRef.id;
+    ops.push({ type: 'set', ref: recRef, data: { targetType: 'member', targetIds: targets, weekdays, skipHolidays, startDate: from, endDate: to, ...fields, ...stampNew() } });
+  } else {
+    dates = dateRange(from, to).filter(d => !(E.excludeOff.checked && isOffDay(d)));
+    if (!dates.length) throw new UserError('対象となる日がありません（「土日・祝日を除く」の設定を確認してください）');
+  }
+  const total = dates.length * targets.length;
+  if (total > BULK_CONFIRM && !confirm(`${total}件の予定を登録します。よろしいですか？`)) return false;
+  const batchId = !recId && total > 1 ? doc(collection(db, 'events')).id : null;
+  const ids = [];
+  for (const t of targets) for (const d of dates) {
+    const ref = doc(collection(db, 'events'));
+    ids.push(ref.id);
+    ops.push({ type: 'set', ref, data: { date: d, targetType: 'member', targetId: t, ...fields, batchId, recurrenceId: recId, ...stampNew() } });
+  }
+  const summary = `予定を登録：${targets.map(memberName).join('・')} ${fmtRange(dates)} ${SLOT_LABEL[fields.slot]} [${catName(fields.category)}] ${fields.title}`
+    + (recId ? `（毎週${WD_ORDER.filter(w => weekdays.includes(w)).map(w => WD[w]).join('・')}）` : '') + `　${total}件`;
+  await commitOps(ops, { action: 'create', entity: recId ? 'recurrence' : 'event', summary, docIds: ids, after: { ...fields, targets: targets.map(memberName), from, to } });
+  toast(`${total}件の予定を登録しました`);
+  return true;
+}
+
+async function groupEvents(ev, scope) {
+  const field = scope === 'future' ? 'recurrenceId' : 'batchId';
+  const snap = await getDocs(query(collection(db, 'events'), where(field, '==', ev[field])));
+  const list = docsOf(snap);
+  return scope === 'future' ? list.filter(x => x.date >= ev.date) : list;
+}
+
+async function saveEditEvent(f, ev, groupType, rec) {
+  const E = f.elements;
+  const scope = groupType ? E.scope.value : 'one';
+  const fields = readEvFields(E);
+  if (scope === 'one') {
+    if (!E.date.value) throw new UserError('日付を入力してください');
+    const after = { ...fields, date: E.date.value, targetId: E.target.value };
+    await commitOps([{ type: 'update', ref: doc(db, 'events', ev.id), data: { ...after, ...stampUpd() } }],
+      { action: 'update', entity: 'event', summary: '予定を変更：' + describeEv({ ...ev, ...after }), docIds: [ev.id], before: pickEv(ev), after: pickEv({ ...ev, ...after }) });
+    toast('予定を更新しました');
+    return true;
+  }
+  const list = await groupEvents(ev, scope);
+  const ops = list.map(x => ({ type: 'update', ref: doc(db, 'events', x.id), data: { ...fields, ...stampUpd() } }));
+  if (scope === 'future' && rec) ops.push({ type: 'update', ref: doc(db, 'recurrences', rec.id), data: { ...fields, ...stampUpd() } });
+  const before = { slot: ev.slot, category: ev.category, title: ev.title, location: ev.location, theme: ev.theme };
+  await commitOps(ops, { action: 'update', entity: 'event', summary: `予定を一括変更（${scope === 'future' ? 'この日以降の繰り返し' : 'グループ'} ${list.length}件）：${describeEv({ ...ev, ...fields })}`, docIds: list.map(x => x.id), before, after: fields });
+  toast(`${list.length}件の予定を更新しました`);
+  return true;
+}
+
+async function deleteEvent(f, ev, groupType, rec) {
+  const scope = groupType ? f.elements.scope.value : 'one';
+  if (scope === 'one') {
+    if (!confirm('この予定を削除しますか？')) return false;
+    await commitOps([{ type: 'delete', ref: doc(db, 'events', ev.id) }], { action: 'delete', entity: 'event', summary: '予定を削除：' + describeEv(ev), docIds: [ev.id], before: pickEv(ev) });
+    toast('予定を削除しました');
+    return true;
+  }
+  const list = await groupEvents(ev, scope);
+  if (!confirm(`${list.length}件の予定を削除しますか？`)) return false;
+  const ops = list.map(x => ({ type: 'delete', ref: doc(db, 'events', x.id) }));
+  if (scope === 'future' && rec) {
+    if (ev.date <= rec.startDate) ops.push({ type: 'delete', ref: doc(db, 'recurrences', rec.id) });
+    else ops.push({ type: 'update', ref: doc(db, 'recurrences', rec.id), data: { endDate: ymd(addDays(parseYmd(ev.date), -1)), ...stampUpd() } });
+  }
+  await commitOps(ops, { action: 'delete', entity: 'event', summary: `予定を一括削除（${list.length}件）：${describeEv(ev)}`, docIds: list.map(x => x.id), before: pickEv(ev) });
+  toast(`${list.length}件の予定を削除しました`);
+  return true;
+}
+
+// =====================================================================
+//  繰り返し予定の延長・終了
+// =====================================================================
+function expiringRecurrences() {
+  const today = todayStr(), lim = ymd(addDays(new Date(), EXPIRY_WARN_DAYS));
+  return S.recurrences.filter(r => r.endDate >= today && r.endDate <= lim).sort((a, b) => a.endDate.localeCompare(b.endDate));
+}
+const recMaxEnd = () => maxEndFrom(todayStr()); // 延長は「今日から最長1年」まで
+
+function openExtendDialog(r) {
+  if (!r) return;
+  const maxEnd = recMaxEnd();
+  const base = r.endDate < todayStr() ? todayStr() : r.endDate;
+  const cand = n => { const v = ymd(addMonths(parseYmd(base), n)); return v > maxEnd ? maxEnd : v; };
+  openDialog(`<form class="form" id="extForm" novalidate>
+    <h3>繰り返し予定の延長</h3>
+    <p><b>${esc(r.targetIds.map(memberName).join('・'))}</b>　${esc(recDesc(r))}　[${esc(catName(r.category))}] ${esc(r.title || '')}</p>
+    <div class="row"><label>現在の終了日</label><div class="fld" style="padding-top:.35rem">${fmtYMD(r.endDate)}</div></div>
+    <div class="row"><label>新しい終了日</label><div class="fld"><input type="date" name="end" value="${cand(3)}" min="${ymd(addDays(parseYmd(r.endDate), 1))}" max="${maxEnd}" required>
+      <div style="margin-top:.4rem">${[1, 3, 6, 12].map(n => `<button type="button" class="small" data-ext="${cand(n)}">${n === 12 ? '1年' : n + 'か月'}</button>`).join(' ')}</div>
+      <p class="hint">延長できるのは今日から最長1年（${fmtYMD(maxEnd)}）までです。非表示のメンバーの分は作成されません。</p></div></div>
+    <p class="error"></p>
+    <div class="actions"><span class="spacer"></span><button type="button" data-close>キャンセル</button><button type="submit" class="primary">延長する</button></div>
+  </form>`);
+  const f = $('#extForm');
+  $$('[data-ext]', f).forEach(b => b.addEventListener('click', () => { f.elements.end.value = b.dataset.ext; }));
+  f.addEventListener('submit', e => { e.preventDefault(); guarded(f, () => extendRecurrence(r, f.elements.end.value)); });
+}
+
+async function extendRecurrence(r, newEnd) {
+  const maxEnd = recMaxEnd();
+  if (!newEnd) throw new UserError('新しい終了日を入力してください');
+  if (newEnd <= r.endDate) throw new UserError('現在の終了日より後の日付を指定してください');
+  if (newEnd > maxEnd) throw new UserError(`延長できるのは ${fmtYMD(maxEnd)} までです`);
+  const targets = r.targetIds.filter(id => memberById(id) && memberById(id).active !== false);
+  if (!targets.length) throw new UserError('対象のメンバーが全員非表示のため延長できません');
+  const nextDay = ymd(addDays(parseYmd(r.endDate), 1));
+  const genFrom = nextDay > todayStr() ? nextDay : todayStr();
+  const dates = recurrenceDates(genFrom, newEnd, r.weekdays, r.skipHolidays);
+  const ops = [{ type: 'update', ref: doc(db, 'recurrences', r.id), data: { endDate: newEnd, ...stampUpd() } }];
+  const fields = { slot: r.slot, category: r.category, title: r.title || '', location: r.location || '', theme: r.theme || '' };
+  for (const t of targets) for (const d of dates) ops.push({ type: 'set', ref: doc(collection(db, 'events')), data: { date: d, targetType: 'member', targetId: t, ...fields, batchId: null, recurrenceId: r.id, ...stampNew() } });
+  await commitOps(ops, { action: 'update', entity: 'recurrence', summary: `繰り返し予定を延長：${targets.map(memberName).join('・')} ${recDesc(r)} [${catName(r.category)}] ${r.title || ''}（${fmtYMD(r.endDate)} → ${fmtYMD(newEnd)}、${dates.length * targets.length}件追加）`, docIds: [r.id], before: { endDate: r.endDate }, after: { endDate: newEnd } });
+  toast('繰り返し予定を延長しました');
+  return true;
+}
+
+async function stopRecurrence(r) {
+  if (!r) return;
+  const today = todayStr();
+  if (!confirm(`この繰り返し予定を終了し、今日（${fmtMD(today)}）以降の予定を削除しますか？\n過去の予定は残ります。`)) return;
+  const list = docsOf(await getDocs(query(collection(db, 'events'), where('recurrenceId', '==', r.id)))).filter(x => x.date >= today);
+  const ops = list.map(x => ({ type: 'delete', ref: doc(db, 'events', x.id) }));
+  if (r.startDate >= today) ops.push({ type: 'delete', ref: doc(db, 'recurrences', r.id) });
+  else ops.push({ type: 'update', ref: doc(db, 'recurrences', r.id), data: { endDate: ymd(addDays(parseYmd(today), -1)), ...stampUpd() } });
+  await commitOps(ops, { action: 'delete', entity: 'recurrence', summary: `繰り返し予定を終了：${r.targetIds.map(memberName).join('・')} ${recDesc(r)} [${catName(r.category)}] ${r.title || ''}（${list.length}件削除）`, docIds: [r.id], before: { endDate: r.endDate } });
+  toast('繰り返し予定を終了しました');
+}
+
+// =====================================================================
+//  設定画面
+// =====================================================================
+function renderSettings() {
+  $('#toolbar').innerHTML = `<div class="nav"><h2 style="text-align:left;margin-left:0">設定</h2></div><div class="tb-right"><button data-view="month">← カレンダーに戻る</button></div>`;
+  const tabs = [['rec', '繰り返し予定']];
+  if (isAdmin()) tabs.push(['history', '編集履歴'], ['members', 'メンバー'], ['viewers', '閲覧者'], ['time', '時間帯'], ['cats', '種別'], ['holidays', '会社休日']);
+  if (!tabs.some(t => t[0] === S.settingsTab)) S.settingsTab = 'rec';
+  const body = { rec: settingsRec, history: settingsHistory, members: settingsMembers, viewers: settingsViewers, time: settingsTime, cats: settingsCats, holidays: settingsHolidays }[S.settingsTab]();
+  setViewHtml(`<div class="settings"><nav class="subtabs">${tabs.map(([k, l]) => `<button data-act="settings-tab" data-tab="${k}" class="${S.settingsTab === k ? 'active' : ''}">${l}</button>`).join('')}${isAdmin() ? '' : '<span class="hint" style="margin-left:auto">編集履歴・メンバーなどの設定は管理者のみ利用できます</span>'}</nav><div class="settings-body">${body}</div></div>`, 'settings');
+  afterSettingsRender();
+}
+function afterSettingsRender() {
+  if (S.settingsTab === 'history') {
+    renderHistoryList();
+    $('#histSearch')?.addEventListener('input', renderHistoryList);
+    $('#histWho')?.addEventListener('change', renderHistoryList);
+  }
+  if (S.settingsTab === 'members' && window.Sortable && $('#memberList')) {
+    Sortable.create($('#memberList'), { handle: '.drag-handle', animation: 150, onEnd: () => guardedAction(saveMemberOrder) });
+  }
+  if (S.settingsTab === 'time') { const f = $('#timeForm'); f.addEventListener('submit', e => { e.preventDefault(); guarded(f, () => saveTimes(f)); }); }
+  if (S.settingsTab === 'cats') {
+    const f = $('#catForm');
+    f.addEventListener('submit', e => { e.preventDefault(); guarded(f, () => saveCats(f)); });
+    if (window.Sortable) Sortable.create($('#catBody'), { handle: '.drag-handle', animation: 150 });
+  }
+  if (S.settingsTab === 'holidays') { const f = $('#holForm'); f.addEventListener('submit', e => { e.preventDefault(); guarded(f, () => addCompanyHoliday(f)); }); }
+}
+
+// ---------- 繰り返し予定 ----------
+function settingsRec() {
+  const today = todayStr();
+  const exp = expiringRecurrences();
+  const row = r => {
+    const ended = r.endDate < today, soon = exp.includes(r);
+    const status = ended ? '<span class="badge gray">終了</span>' : soon ? '<span class="badge warn">終了間近</span>' : '<span class="badge ok">有効</span>';
+    const c = catById(r.category);
+    return `<tr class="${soon ? 'warn' : ''}"><td>${status}</td><td>${esc(r.targetIds.map(memberName).join('・'))}</td><td>${esc(recDesc(r))}</td>
+      <td><span class="swatch" style="background:${c?.color || '#888'}"></span> ${esc(c?.name || '')} ${esc(r.title || '')}</td>
+      <td>${fmtYMD(r.startDate)}〜${fmtYMD(r.endDate)}</td>
+      <td class="act"><button class="small" data-act="rec-extend" data-id="${r.id}">延長</button> ${ended ? '' : `<button class="small danger" data-act="rec-stop" data-id="${r.id}">終了</button>`}</td></tr>`;
+  };
+  const table = list => `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>状態</th><th>対象</th><th>繰り返し</th><th>種別・内容</th><th>期間</th><th></th></tr></thead><tbody>${list.map(row).join('')}</tbody></table></div>`;
+  const all = [...S.recurrences].sort((a, b) => (a.endDate < today) - (b.endDate < today) || a.endDate.localeCompare(b.endDate));
+  return `<h3>終了日が${EXPIRY_WARN_DAYS}日以内の繰り返し予定</h3>${exp.length ? table(exp) : '<p class="muted">該当する繰り返し予定はありません。</p>'}
+    <h3>すべての繰り返し予定</h3><p class="hint">新しい繰り返し予定は、カレンダーのセルをクリックし「毎週繰り返す」にチェックして登録します。</p>
+    ${all.length ? table(all) : '<p class="muted">登録されている繰り返し予定はありません。</p>'}`;
+}
+
+// ---------- 編集履歴 ----------
+async function loadHistory() {
+  try {
+    S.history = docsOf(await getDocs(query(collection(db, 'history'), orderBy('at', 'desc'), limit(300))));
+    S.historyLoaded = true;
+    renderAll();
+  } catch (e) { onErr(e); }
+}
+function settingsHistory() {
+  const who = [...new Map(S.history.map(h => [h.byEmail, h.byName])).entries()];
+  return `<div class="tab-head"><select id="histWho"><option value="">すべての変更者</option>${who.map(([e, n]) => `<option value="${esc(e)}">${esc(n || e)}</option>`).join('')}</select>
+    <input type="text" id="histSearch" placeholder="内容で検索" style="max-width:260px"><button data-act="hist-reload">再読み込み</button></div>
+    <p class="hint">直近300件を表示しています。${isAdmin() ? '誤って社外秘情報が記録された場合は、その行の「削除」で消去できます（予定そのものも忘れずに修正してください）。' : ''}</p><div id="histList">${S.historyLoaded ? '' : '<p class="muted">読み込み中…</p>'}</div>`;
+}
+const ACTION_LABEL = { create: '追加', update: '変更', delete: '削除', purge: '履歴削除' };
+const FIELD_LABEL = { date: '日付', targetId: '対象', slot: '区分', category: '種別', title: '内容', location: '場所', theme: '関連テーマ', name: '表示名', email: 'メール', color: '色', isAdmin: '管理者', role: '役割', active: '表示', endDate: '終了日', slots: '時間帯', categories: '種別', companyHolidays: '会社休日', order: '表示順' };
+function fmtVal(k, v) {
+  if (v == null || v === '') return '（なし）';
+  if (k === 'targetId') return memberName(v);
+  if (k === 'slot') return SLOT_LABEL[v] || v;
+  if (k === 'category') return catName(v);
+  if (typeof v === 'boolean') return v ? 'はい' : 'いいえ';
+  if (Array.isArray(v)) return v.map(x => typeof x === 'object' ? (x.name || x.date || JSON.stringify(x)) : x).join('、');
+  if (typeof v === 'object') return Object.entries(v).map(([a, b]) => `${a}:${typeof b === 'object' ? Object.values(b).join('〜') : b}`).join(' ');
+  return String(v);
+}
+function diffHtml(h) {
+  if (!h.before || !h.after) return '';
+  const keys = [...new Set([...Object.keys(h.before), ...Object.keys(h.after)])].filter(k => JSON.stringify(h.before[k]) !== JSON.stringify(h.after[k]));
+  return keys.length ? `<ul class="diff">${keys.map(k => `<li>${esc(FIELD_LABEL[k] || k)}：${esc(fmtVal(k, h.before[k]))} → ${esc(fmtVal(k, h.after[k]))}</li>`).join('')}</ul>` : '';
+}
+function renderHistoryList() {
+  const el = $('#histList');
+  if (!el || !S.historyLoaded) return;
+  const who = $('#histWho')?.value || '', q = ($('#histSearch')?.value || '').trim();
+  const list = S.history.filter(h => (!who || h.byEmail === who) && (!q || (h.summary || '').includes(q)));
+  const admin = isAdmin();
+  el.innerHTML = list.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th style="width:9.5rem">日時</th><th style="width:7rem">変更者</th><th style="width:5rem">操作</th><th>内容</th>${admin ? '<th style="width:4.5rem"></th>' : ''}</tr></thead><tbody>${list.map(h =>
+    `<tr><td>${fmtTs(h.at)}</td><td>${esc(h.byName || h.byEmail)}</td><td><span class="badge ${h.action === 'delete' || h.action === 'purge' ? 'warn' : ''}">${ACTION_LABEL[h.action] || h.action}</span></td><td>${esc(h.summary)}${diffHtml(h)}</td>`
+    + (admin ? `<td class="act">${h.action === 'purge' ? '' : `<button class="small danger" data-act="hist-del" data-id="${h.id}" title="誤って社外秘情報を記入した場合の消去用">削除</button>`}</td>` : '') + '</tr>').join('')}</tbody></table></div>`
+    : '<p class="muted">該当する履歴はありません。</p>';
+}
+
+// 管理者のみ：誤って社外秘情報が記録された履歴を消去する。削除したこと自体は内容を含めずに記録する
+async function deleteHistory(id) {
+  const h = S.history.find(x => x.id === id);
+  if (!h || !confirm(`この履歴を削除しますか？\n\n${fmtTs(h.at)}　${h.byName || h.byEmail}\n${h.summary}\n\n削除した内容は元に戻せません。「履歴を削除」という操作だけが記録されます。`)) return;
+  await commitOps([{ type: 'delete', ref: doc(db, 'history', id) }], { action: 'purge', entity: 'history', summary: '履歴を削除' });
+  toast('履歴を削除しました');
+  await loadHistory();
+}
+
+// ---------- メンバー ----------
+function settingsMembers() {
+  const list = S.members.filter(m => S.showInactiveSettings || m.active !== false).sort(byOrder);
+  return `<div class="tab-head"><button class="primary" data-act="member-add">＋ メンバーを追加</button>
+    <label class="inline"><input type="checkbox" data-act="toggle-inactive-settings" ${S.showInactiveSettings ? 'checked' : ''}> 非表示のメンバーも表示</label></div>
+    <p class="hint">左端の ≡ をドラッグすると表示順を変更できます。異動・退職したメンバーは「非表示」にしてください（過去の予定は残り、ログインはできなくなります）。管理者は最低1人必要です。</p>
+    <ul class="member-list" id="memberList">${list.map(m => `<li data-id="${m.id}" class="${m.active === false ? 'inactive' : ''}">
+      <span class="drag-handle" title="ドラッグで並べ替え">≡</span><span class="swatch" style="background:${m.color}"></span>
+      <span class="m-name">${esc(m.name)}</span>${memberIsAdmin(m) ? '<span class="badge">管理者</span>' : ''}${m.active === false ? '<span class="badge gray">非表示</span>' : ''}
+      <span class="m-email">${esc(m.email || '（メール未登録：ログイン不可）')}</span><span class="spacer"></span>
+      <button class="small" data-act="member-edit" data-id="${m.id}">編集</button>
+      <button class="small" data-act="member-toggle" data-id="${m.id}">${m.active === false ? '再表示' : '非表示にする'}</button></li>`).join('')}</ul>`;
+}
+
+async function saveMemberOrder() {
+  const domIds = $$('#memberList li').map(li => li.dataset.id);
+  const rest = S.members.filter(m => !domIds.includes(m.id)).sort(byOrder).map(m => m.id);
+  const ops = [];
+  [...domIds, ...rest].forEach((id, i) => { if (memberById(id).order !== i + 1) ops.push({ type: 'update', ref: doc(db, 'members', id), data: { order: i + 1 } }); });
+  if (!ops.length) return;
+  await commitOps(ops, { action: 'update', entity: 'member', summary: 'メンバーの表示順を変更：' + domIds.map(memberName).join(' → ') });
+}
+
+const MEMBER_FIELDS = ['name', 'email', 'color', 'role', 'active'];
+const loginableAdmins = list => list.filter(m => m.active !== false && memberIsAdmin(m) && m.email);
+
+async function saveMember(id, input) {
+  const old = id ? memberById(id) : null;
+  const name = input.name.trim(), email = input.email.trim().toLowerCase();
+  if (!name) throw new UserError('表示名を入力してください');
+  if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new UserError('メールアドレスの形式が正しくありません');
+  if (email && S.members.some(m => m.id !== id && m.email === email)) throw new UserError('このメールアドレスは別のメンバーに登録されています');
+  if (email && data.active && S.viewers.some(v => v.email === email)) throw new UserError('このメールアドレスは閲覧者として登録されています。先に閲覧者から削除してください');
+  const data = { name, email, color: input.color, role: input.isAdmin ? 'admin' : 'member', active: !!input.active };
+
+  // 管理者が0人になる変更（最後の管理者の権限解除・非表示・メール削除）は不可
+  if (old) {
+    const after = S.members.map(m => m.id === id ? { ...m, ...data } : m);
+    if (loginableAdmins(S.members).length && !loginableAdmins(after).length)
+      throw new UserError('管理者が1人もいなくなるため、この変更はできません。先に別のメンバーを管理者にしてください。');
+  }
+  if (old && old.email === S.email) {
+    if (email !== S.email && !confirm('ご自身のメールアドレスを変更すると、現在のアカウントではログインできなくなります。続けますか？')) return false;
+    if (!data.active && !confirm('ご自身を非表示にすると、ログインできなくなります。続けますか？')) return false;
+    if (memberIsAdmin(old) && data.role !== 'admin' && !confirm('ご自身の管理者権限を外すと、設定を変更できなくなります。続けますか？')) return false;
+  }
+
+  const ref = old ? doc(db, 'members', id) : doc(collection(db, 'members'));
+  const ops = [{ type: 'set', ref, merge: true, data: { ...data, isAdmin: deleteField(), ...(old ? {} : { order: Math.max(0, ...S.members.map(m => m.order || 0)) + 1, createdAt: serverTimestamp() }), updatedAt: serverTimestamp() } }];
+  // allowedUsers（ログイン許可）を members と同時に更新。メール変更時は旧ドキュメント削除＋新規作成
+  const oldKey = old && old.active !== false && old.email ? old.email : null;
+  const newKey = data.active && email ? email : null;
+  if (oldKey && oldKey !== newKey) ops.push({ type: 'delete', ref: doc(db, 'allowedUsers', oldKey) });
+  if (newKey) ops.push({ type: 'set', ref: doc(db, 'allowedUsers', newKey), data: { memberId: ref.id, role: data.role, name } });
+
+  const pick = m => Object.fromEntries(MEMBER_FIELDS.map(k => [k, k === 'role' ? roleOf(m) : m[k] ?? (k === 'active' ? true : '')]));
+  await commitOps(ops, { action: old ? 'update' : 'create', entity: 'member', summary: `メンバーを${old ? '変更' : '追加'}：${name}`, docIds: [ref.id], before: old ? pick(old) : null, after: data });
+  toast(old ? 'メンバー情報を更新しました' : 'メンバーを追加しました');
+  return true;
+}
+
+async function toggleMemberActive(m) {
+  const toActive = m.active === false;
+  if (!toActive && !confirm(`${m.name} さんを非表示にしますか？\n過去の予定は残りますが、カレンダーに表示されなくなり、ログインもできなくなります。`)) return;
+  await saveMember(m.id, { ...m, email: m.email || '', isAdmin: memberIsAdmin(m), active: toActive });
+}
+
+function openMemberDialog(m) {
+  const isNew = !m;
+  const used = S.members.map(x => x.color);
+  m = m || { name: '', email: '', color: MEMBER_COLORS.find(c => !used.includes(c)) || MEMBER_COLORS[S.members.length % MEMBER_COLORS.length], role: 'member', active: true };
+  openDialog(`<form class="form" id="memForm" novalidate>
+    <h3>${isNew ? 'メンバーの追加' : 'メンバーの編集'}</h3>
+    <div class="row"><label>表示名</label><div class="fld"><input type="text" name="name" maxlength="30" value="${esc(m.name)}" required autofocus></div></div>
+    <div class="row"><label>メール</label><div class="fld"><input type="email" name="email" maxlength="200" value="${esc(m.email || '')}" placeholder="社内メールアドレス">
+      <p class="hint">このアドレスで「初回登録」（パスワード設定とメール確認）をすると、ログインできるようになります。変更すると、ログイン許可も新しいアドレスに切り替わります（新しいアドレスでの初回登録が必要です）。</p></div></div>
+    <div class="row"><label>表示色</label><div class="fld swatches"><input type="color" name="color" value="${m.color}">${MEMBER_COLORS.map(c => `<button type="button" data-color="${c}" style="background:${c}" title="${c}"></button>`).join('')}</div></div>
+    <div class="row"><label>権限</label><div class="fld"><label class="inline"><input type="checkbox" name="isAdmin" ${memberIsAdmin(m) ? 'checked' : ''}> 管理者（メンバー・設定を編集できる）</label></div></div>
+    <div class="row"><label>表示</label><div class="fld"><label class="inline"><input type="checkbox" name="active" ${m.active !== false ? 'checked' : ''}> カレンダーに表示する（外すと非表示・ログイン不可）</label></div></div>
+    <p class="error"></p>
+    <div class="actions"><span class="spacer"></span><button type="button" data-close>キャンセル</button><button type="submit" class="primary">保存</button></div>
+  </form>`);
+  const f = $('#memForm'), E = f.elements;
+  $$('[data-color]', f).forEach(b => b.addEventListener('click', () => { E.color.value = b.dataset.color; }));
+  f.addEventListener('submit', e => {
+    e.preventDefault();
+    guarded(f, () => saveMember(isNew ? null : m.id, { name: E.name.value, email: E.email.value, color: E.color.value, isAdmin: E.isAdmin.checked, active: E.active.checked }));
+  });
+}
+
+// ---------- 閲覧者 ----------
+function settingsViewers() {
+  const list = [...S.viewers].sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+  return `<div class="tab-head"><button class="primary" data-act="viewer-add">＋ 閲覧者を追加</button></div>
+    <p class="hint">閲覧者は予定表の閲覧・絞り込み・印刷・CSV出力のみできます（予定の登録・編集、設定、編集履歴は利用できません）。予定表の列には表示されません。<br>削除するとログインできなくなります。登録後、本人に「初回登録」をしてもらってください。</p>
+    ${list.length ? `<div class="tbl-wrap"><table class="tbl" style="max-width:760px"><thead><tr><th>表示名</th><th>メールアドレス</th><th></th></tr></thead><tbody>${list.map(v =>
+      `<tr><td>${esc(v.name)}<span class="badge view-only">閲覧者</span></td><td>${esc(v.email)}</td><td class="act"><button class="small" data-act="viewer-edit" data-id="${v.id}">編集</button> <button class="small danger" data-act="viewer-del" data-id="${v.id}">削除</button></td></tr>`).join('')}</tbody></table></div>`
+      : '<p class="muted">登録されている閲覧者はいません。</p>'}`;
+}
+function openViewerDialog(v) {
+  const isNew = !v;
+  v = v || { name: '', email: '' };
+  openDialog(`<form class="form" id="viewerForm" novalidate>
+    <h3>${isNew ? '閲覧者の追加' : '閲覧者の編集'}</h3>
+    <div class="row"><label>表示名</label><div class="fld"><input type="text" name="name" maxlength="30" value="${esc(v.name)}" required autofocus></div></div>
+    <div class="row"><label>メール</label><div class="fld"><input type="email" name="email" maxlength="200" value="${esc(v.email)}" placeholder="社内メールアドレス" required>
+      <p class="hint">このアドレスで「初回登録」をすると、閲覧専用でログインできるようになります。変更すると、ログイン許可も新しいアドレスに切り替わります。</p></div></div>
+    <p class="error"></p>
+    <div class="actions"><span class="spacer"></span><button type="button" data-close>キャンセル</button><button type="submit" class="primary">保存</button></div>
+  </form>`);
+  const f = $('#viewerForm');
+  f.addEventListener('submit', e => { e.preventDefault(); guarded(f, () => saveViewer(isNew ? null : v, f.elements.name.value, f.elements.email.value)); });
+}
+async function saveViewer(old, nameIn, emailIn) {
+  const name = nameIn.trim(), email = emailIn.trim().toLowerCase();
+  if (!name) throw new UserError('表示名を入力してください');
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new UserError('メールアドレスを正しく入力してください');
+  // 非表示のメンバーのアドレスは閲覧者に使える（そのメンバーの再表示は saveMember 側で止まる）
+  if (S.members.some(m => m.active !== false && m.email === email)) throw new UserError('このメールアドレスはメンバーとして登録されています');
+  if (S.viewers.some(x => x.id !== old?.id && x.email === email)) throw new UserError('このメールアドレスは別の閲覧者に登録されています');
+  const ref = old ? doc(db, 'viewers', old.id) : doc(collection(db, 'viewers'));
+  const ops = [{ type: 'set', ref, merge: true, data: { name, email, ...(old ? {} : { createdAt: serverTimestamp() }), updatedAt: serverTimestamp() } }];
+  // ログイン許可（allowedUsers）を同時に更新。メール変更時は旧ドキュメント削除＋新規作成
+  if (old && old.email !== email) ops.push({ type: 'delete', ref: doc(db, 'allowedUsers', old.email) });
+  ops.push({ type: 'set', ref: doc(db, 'allowedUsers', email), data: { viewerId: ref.id, role: 'viewer', name } });
+  await commitOps(ops, { action: old ? 'update' : 'create', entity: 'viewer', summary: `閲覧者を${old ? '変更' : '追加'}：${name}`, docIds: [ref.id], before: old ? { name: old.name, email: old.email } : null, after: { name, email } });
+  toast(old ? '閲覧者を更新しました' : '閲覧者を追加しました');
+  return true;
+}
+async function deleteViewer(v) {
+  if (!v || !confirm(`閲覧者「${v.name}」を削除しますか？\n削除するとログインできなくなります。`)) return;
+  await commitOps([{ type: 'delete', ref: doc(db, 'viewers', v.id) }, { type: 'delete', ref: doc(db, 'allowedUsers', v.email) }],
+    { action: 'delete', entity: 'viewer', summary: `閲覧者を削除：${v.name}`, docIds: [v.id], before: { name: v.name, email: v.email } });
+  toast('閲覧者を削除しました');
+}
+
+// ---------- 旧形式（isAdmin）から役割（role）への移行 ----------
+const legacyMembers = () => S.members.filter(m => !m.role);
+const needsMigration = () => S.legacyAllowed.length > 0 || legacyMembers().length > 0;
+async function checkMigration() {
+  try { S.legacyAllowed = docsOf(await getDocs(collection(db, 'allowedUsers'))).filter(d => !d.role); renderAll(); }
+  catch (e) { console.warn(e); }
+}
+async function runMigration() {
+  await checkMigration();
+  const ops = [
+    ...S.legacyAllowed.map(d => ({ type: 'update', ref: doc(db, 'allowedUsers', d.id), data: { role: d.isAdmin === true ? 'admin' : 'member', isAdmin: deleteField() } })),
+    ...legacyMembers().map(m => ({ type: 'update', ref: doc(db, 'members', m.id), data: { role: m.isAdmin === true ? 'admin' : 'member', isAdmin: deleteField() } })),
+  ];
+  if (!ops.length) { toast('移行が必要なデータはありません'); return; }
+  if (!confirm(`${ops.length}件の権限データを役割（role）形式に移行します。よろしいですか？`)) return;
+  await commitOps(ops, { action: 'update', entity: 'config', summary: `権限データを役割（role）形式に移行（${ops.length}件）` });
+  toast('移行が完了しました');
+  await checkMigration();
+}
+
+// ---------- 時間帯 ----------
+function settingsTime() {
+  const sl = S.config.slots;
+  const pair = (k, label) => `<span>${label}</span><span><input type="time" name="${k}_start" value="${sl[k].start}" step="300" required> 〜 <input type="time" name="${k}_end" value="${sl[k].end}" step="300" required></span>`;
+  return `<form id="timeForm" novalidate><h3>時間帯</h3><p class="hint">予定は「午前」「午後」の区分で管理します。ここで設定した時刻は画面上の表示に使われます。</p>
+    <div class="time-grid">${pair('am', '午前')}${pair('lunch', '昼休み')}${pair('pm', '午後')}</div>
+    <p class="error"></p><button type="submit" class="primary">保存</button></form>`;
+}
+async function saveTimes(f) {
+  const E = f.elements;
+  const slots = {};
+  for (const k of ['am', 'lunch', 'pm']) {
+    slots[k] = { start: E[k + '_start'].value, end: E[k + '_end'].value };
+    if (!slots[k].start || !slots[k].end || slots[k].start >= slots[k].end) throw new UserError('開始時刻は終了時刻より前にしてください');
+  }
+  if (slots.am.end > slots.lunch.start || slots.lunch.end > slots.pm.start) throw new UserError('午前 → 昼休み → 午後 の順になるように設定してください');
+  await commitOps([{ type: 'update', ref: cfgRef(), data: { slots, ...stampUpd() } }], { action: 'update', entity: 'config', summary: '時間帯の設定を変更', before: { slots: S.config.slots }, after: { slots } });
+  toast('時間帯を保存しました');
+}
+
+// ---------- 種別 ----------
+const catRow = c => `<tr data-cat="${c.id}"><td><span class="drag-handle">≡</span></td><td><input type="color" name="color" value="${c.color}"></td>
+  <td><input type="text" name="name" maxlength="20" value="${esc(c.name)}"></td>
+  <td style="text-align:center"><input type="checkbox" name="abs" ${c.isAbsence ? 'checked' : ''}></td>
+  <td style="text-align:center"><input type="checkbox" name="hidden" ${c.hidden ? 'checked' : ''}></td></tr>`;
+function settingsCats() {
+  return `<form id="catForm" novalidate><h3>種別</h3><p class="hint">「不在扱い」にした種別は、トップの「今日の不在者」に表示されます。「使わない」にすると入力画面の選択肢から外れます（過去の予定はそのまま表示されます）。≡ をドラッグで並べ替えできます。</p>
+    <div class="tbl-wrap"><table class="tbl" style="max-width:640px"><thead><tr><th style="width:2rem"></th><th style="width:4rem">色</th><th>種別名</th><th style="width:6rem;text-align:center">不在扱い</th><th style="width:6rem;text-align:center">使わない</th></tr></thead>
+    <tbody id="catBody">${cats().map(catRow).join('')}</tbody></table></div>
+    <p><button type="button" data-act="cat-add">＋ 種別を追加</button></p><p class="error"></p><button type="submit" class="primary">保存</button></form>`;
+}
+function addCatRow() {
+  $('#catBody').insertAdjacentHTML('beforeend', catRow({ id: 'c' + Date.now().toString(36), name: '', color: '#6b7a8c', isAbsence: false, hidden: false }));
+  $('#catBody tr:last-child input[name=name]').focus();
+}
+async function saveCats(f) {
+  const list = $$('tr[data-cat]', f).map((r, i) => ({
+    id: r.dataset.cat, name: $('[name=name]', r).value.trim(), color: $('[name=color]', r).value,
+    isAbsence: $('[name=abs]', r).checked, hidden: $('[name=hidden]', r).checked, order: i + 1,
+  }));
+  if (list.some(c => !c.name)) throw new UserError('種別名を入力してください');
+  if (new Set(list.map(c => c.name)).size !== list.length) throw new UserError('同じ名前の種別があります');
+  await commitOps([{ type: 'update', ref: cfgRef(), data: { categories: list, ...stampUpd() } }], { action: 'update', entity: 'config', summary: '種別の設定を変更', before: { categories: S.config.categories }, after: { categories: list } });
+  toast('種別を保存しました');
+}
+
+// ---------- 会社休日 ----------
+function settingsHolidays() {
+  const list = [...S.config.companyHolidays].sort((a, b) => a.date.localeCompare(b.date));
+  return `<h3>会社休日</h3><p class="hint">日本の祝日（振替休日・国民の休日を含む）は自動で判定します。ここでは年末年始・夏季休業など会社独自の休日を登録します。</p>
+    <form id="holForm" class="tab-head" novalidate><input type="date" name="date" required><input type="text" name="name" maxlength="30" placeholder="名称（例：年末年始休業）" style="max-width:260px"><button type="submit" class="primary">追加</button><p class="error" style="margin:0"></p></form>
+    ${list.length ? `<div class="tbl-wrap"><table class="tbl" style="max-width:560px;margin-top:.8rem"><thead><tr><th>日付</th><th>名称</th><th></th></tr></thead><tbody>${list.map(h => `<tr><td>${fmtYMD(h.date)}</td><td>${esc(h.name)}</td><td class="act"><button class="small danger" data-act="hol-del" data-date="${h.date}">削除</button></td></tr>`).join('')}</tbody></table></div>` : '<p class="muted">登録されている会社休日はありません。</p>'}`;
+}
+async function addCompanyHoliday(f) {
+  const date = f.elements.date.value, name = f.elements.name.value.trim() || '会社休日';
+  if (!date) throw new UserError('日付を入力してください');
+  if (S.config.companyHolidays.some(h => h.date === date)) throw new UserError('その日はすでに登録されています');
+  const list = [...S.config.companyHolidays, { date, name }].sort((a, b) => a.date.localeCompare(b.date));
+  await commitOps([{ type: 'update', ref: cfgRef(), data: { companyHolidays: list, ...stampUpd() } }], { action: 'update', entity: 'config', summary: `会社休日を追加：${fmtYMD(date)} ${name}` });
+  toast('会社休日を追加しました');
+}
+async function removeCompanyHoliday(date) {
+  const h = S.config.companyHolidays.find(x => x.date === date);
+  if (!h || !confirm(`${fmtYMD(date)} ${h.name} を削除しますか？`)) return;
+  const list = S.config.companyHolidays.filter(x => x.date !== date);
+  await commitOps([{ type: 'update', ref: cfgRef(), data: { companyHolidays: list, ...stampUpd() } }], { action: 'delete', entity: 'config', summary: `会社休日を削除：${fmtYMD(date)} ${h.name}` });
+}
+
+// =====================================================================
+//  CSV出力（UTF-8 BOM付き）
+// =====================================================================
+function exportCsv() {
+  const { start, end } = viewRange();
+  let days = new Set(dateRange(start, end));
+  if (S.view === 'week' && !S.showWeekend) days = new Set([...days].filter(d => { const w = parseYmd(d).getDay(); return w !== 0 && w !== 6; }));
+  const vis = visibleMembers();
+  const visIds = new Set(vis.map(m => m.id));
+  const order = id => memberById(id)?.order ?? 999;
+  const list = S.events.filter(e => days.has(e.date) && visIds.has(e.targetId) && passCat(e))
+    .sort((a, b) => a.date.localeCompare(b.date) || SLOT_RANK[a.slot] - SLOT_RANK[b.slot] || order(a.targetId) - order(b.targetId) || cmpEvent(a, b));
+  const cell = v => {
+    let s = String(v ?? '');
+    if (/^[=+\-@]/.test(s)) s = "'" + s; // 数式として解釈されないように
+    return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const rows = [['日付', '曜日', '区分', 'メンバー', '種別', '内容', '場所', '関連テーマ', '繰り返し', '更新者', '更新日時']];
+  for (const e of list) {
+    const d = parseYmd(e.date);
+    rows.push([`${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())}`, WD[d.getDay()], SLOT_LABEL[e.slot], memberName(e.targetId), catName(e.category),
+      e.title, e.location, e.theme, e.recurrenceId ? '○' : '', e.updatedByName || e.updatedBy || '', fmtTs(e.updatedAt)]);
+  }
+  const csv = '﻿' + rows.map(r => r.map(cell).join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = S.view === 'week' ? `予定_${start}週.csv` : `予定_${start.slice(0, 7)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  toast(`${list.length}件を出力しました`);
+}
+
+// =====================================================================
+//  初期セットアップ（config/app が無いとき、管理者のみ）
+// =====================================================================
+function showSetup() {
+  const rows = INITIAL_MEMBERS.map((m, i) => `<tr>
+    <td><input type="text" name="name" value="${esc(m.name)}" maxlength="30"></td>
+    <td><input type="email" name="email" value="${i === 0 ? esc(S.email) : ''}" ${i === 0 ? 'readonly' : ''} placeholder="未定なら空欄"></td>
+    <td style="text-align:center"><input type="checkbox" name="admin" ${m.isAdmin || i === 0 ? 'checked' : ''} ${i === 0 ? 'disabled' : ''}></td></tr>`).join('');
+  const sl = DEFAULT_SLOTS;
+  showScreen(`<div class="setup"><h2>初期セットアップ</h2>
+    <p>最初の管理者（${esc(S.email)}）としてログインしています。初期メンバーのメールアドレスを入力してください。<br><span class="muted">空欄のメンバーは後から設定画面で登録できます（それまではログインできません）。</span></p>
+    <form id="setupForm" novalidate><table class="tbl"><thead><tr><th>表示名</th><th>メールアドレス</th><th style="width:4.5rem">管理者</th></tr></thead><tbody>${rows}</tbody></table>
+    <p class="hint">時間帯：午前 ${fmtTime(sl.am.start)}〜${fmtTime(sl.am.end)}／昼休み ${fmtTime(sl.lunch.start)}〜${fmtTime(sl.lunch.end)}／午後 ${fmtTime(sl.pm.start)}〜${fmtTime(sl.pm.end)}（後から設定画面で変更できます）</p>
+    <p class="error"></p><p><button type="submit" class="primary">初期データを作成</button> <button type="button" data-act="logout">ログアウト</button></p></form></div>`);
+  const f = $('#setupForm');
+  f.addEventListener('submit', e => { e.preventDefault(); guarded(f, () => runSetup(f)); });
+}
+async function runSetup(f) {
+  const rows = $$('tbody tr', f).map((tr, i) => ({ name: $('[name=name]', tr).value.trim(), email: $('[name=email]', tr).value.trim().toLowerCase(), isAdmin: i === 0 || $('[name=admin]', tr).checked }))
+    .filter((r, i) => i === 0 || r.name);
+  if (!rows[0].name) throw new UserError('1行目（ご自身）の表示名を入力してください');
+  for (const r of rows) if (r.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(r.email)) throw new UserError(`${r.name} のメールアドレスの形式が正しくありません`);
+  const emails = rows.map(r => r.email).filter(Boolean);
+  if (new Set(emails).size !== emails.length) throw new UserError('同じメールアドレスが重複しています');
+  const ops = [{ type: 'set', ref: cfgRef(), data: { slots: DEFAULT_SLOTS, categories: DEFAULT_CATEGORIES, companyHolidays: [], createdAt: serverTimestamp(), updatedAt: serverTimestamp(), updatedBy: S.user.email } }];
+  rows.forEach((r, i) => {
+    const ref = doc(collection(db, 'members'));
+    ops.push({ type: 'set', ref, data: { name: r.name, email: r.email, color: MEMBER_COLORS[i % MEMBER_COLORS.length], order: i + 1, role: r.isAdmin ? 'admin' : 'member', active: true, createdAt: serverTimestamp(), updatedAt: serverTimestamp() } });
+    if (r.email) ops.push({ type: 'set', ref: doc(db, 'allowedUsers', r.email), data: { memberId: ref.id, role: r.isAdmin ? 'admin' : 'member', name: r.name } });
+  });
+  S.allowed = { ...S.allowed, name: rows[0].name };
+  await commitOps(ops, { action: 'create', entity: 'config', summary: `初期セットアップ：${rows.map(r => r.name).join('・')}` });
+  await handleAuth(auth.currentUser);
+  return true;
+}
+
+// ---------- トースト ----------
+let toastTimer;
+function toast(msg, type = 'info') {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  t.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.hidden = true; }, type === 'error' ? 6000 : 3000);
+}
+</script>
+</body>
+</html>

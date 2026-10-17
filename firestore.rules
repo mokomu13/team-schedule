@@ -1,0 +1,122 @@
+rules_version = '2';
+
+// 開発チーム予定表 - Firestore セキュリティルール
+// ・メール確認済み（email_verified）かつ allowedUsers/{メールアドレス} に登録されたユーザーだけが利用できる
+// ・役割（allowedUsers.role）：admin（管理者）／member（メンバー）／viewer（閲覧者）
+//     読み取り ……………………………… 全役割（編集履歴・閲覧者一覧は管理者のみ）
+//     予定・繰り返し予定・履歴の作成 … 管理者・メンバー
+//     設定・メンバー・閲覧者・ログイン許可・設備の変更 … 管理者のみ
+// ・allowedUsers は管理者しか書き込めないため、閲覧者やメンバーが自分の role を書き換えることはできない
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email_verified == true;
+    }
+    function allowedPath() {
+      return /databases/$(database)/documents/allowedUsers/$(request.auth.token.email);
+    }
+    // 管理者・メンバー・閲覧者のいずれか
+    function isUser() {
+      return signedIn() && exists(allowedPath());
+    }
+    function userData() {
+      return get(allowedPath()).data;
+    }
+    // 役割。role が無い旧形式のデータ（isAdmin のみ）は、アプリで移行するまで admin / member として扱う
+    function roleOf(d) {
+      return d.get('role', d.get('isAdmin', false) == true ? 'admin' : 'member');
+    }
+    function isAdmin() {
+      return isUser() && roleOf(userData()) == 'admin';
+    }
+    // 予定などを書き込める役割（管理者・メンバー）。閲覧者は含まない
+    function canEdit() {
+      return isUser() && roleOf(userData()) in ['admin', 'member'];
+    }
+
+    // 場所は選択式（index.html の LOCATIONS と合わせる）
+    function validLocation(loc) {
+      return loc in ['', '社内', '社外（近隣）', '出張'];
+    }
+    function stampedByMe() {
+      return request.resource.data.updatedBy == request.auth.token.email;
+    }
+    function validEvent() {
+      let d = request.resource.data;
+      return d.date is string && d.date.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')
+        && d.slot in ['am', 'pm', 'allday']
+        && d.targetType in ['member', 'equipment']
+        && d.targetId is string && d.targetId.size() > 0
+        && d.category is string && d.category.size() > 0
+        && d.title is string && d.title.size() <= 500
+        && validLocation(d.location)
+        && d.theme is string && d.theme.size() <= 200
+        && stampedByMe();
+    }
+    function validRecurrence() {
+      let d = request.resource.data;
+      return d.targetIds is list && d.targetIds.size() > 0
+        && d.weekdays is list && d.weekdays.size() > 0
+        && d.startDate is string && d.endDate is string && d.startDate <= d.endDate
+        && d.slot in ['am', 'pm', 'allday']
+        && validLocation(d.location)
+        && stampedByMe();
+    }
+
+    // アプリ設定（時間帯・種別・会社休日）
+    match /config/{docId} {
+      allow read: if isUser();
+      allow write: if isAdmin();
+    }
+
+    // メンバー（予定表の列）
+    match /members/{memberId} {
+      allow read: if isUser();
+      allow write: if isAdmin();
+    }
+
+    // 閲覧者の一覧（管理者のみ）
+    match /viewers/{viewerId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ログイン許可リスト（ドキュメントID = 小文字のメールアドレス）
+    // 自分のドキュメントは読めるが、書き込みは管理者のみ（自分の role は変更できない）
+    match /allowedUsers/{email} {
+      allow read: if (signedIn() && request.auth.token.email == email) || isAdmin();
+      allow create, update: if isAdmin() && request.resource.data.get('role', '') in ['admin', 'member', 'viewer'];
+      allow delete: if isAdmin();
+    }
+
+    // 設備（将来の設備予約用）
+    match /equipment/{equipmentId} {
+      allow read: if isUser();
+      allow write: if isAdmin();
+    }
+
+    // 予定（管理者・メンバーは全員分を編集可能。閲覧者は読み取りのみ）
+    match /events/{eventId} {
+      allow read: if isUser();
+      allow create, update: if canEdit() && validEvent();
+      allow delete: if canEdit();
+    }
+
+    // 繰り返し予定のルール
+    match /recurrences/{recurrenceId} {
+      allow read: if isUser();
+      allow create, update: if canEdit() && validRecurrence();
+      allow delete: if canEdit();
+    }
+
+    // 編集履歴（読み取り・削除は管理者のみ、作成は管理者・メンバー、更新は不可）
+    match /history/{historyId} {
+      allow read: if isAdmin();
+      allow create: if canEdit() && request.resource.data.byEmail == request.auth.token.email;
+      allow delete: if isAdmin();
+      allow update: if false;
+    }
+  }
+}
