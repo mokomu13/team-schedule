@@ -138,7 +138,22 @@ body.readonly .grid td.cell:hover{box-shadow:none}
 .week thead tr.sub th{top:3rem;font-size:.8rem;color:var(--muted);font-weight:400;padding:.15rem}
 .week thead th.sat{background:var(--sat);color:var(--sat-text)} .week thead th.sun{background:var(--sun);color:var(--sun-text)}
 .week thead th.today{background:var(--today)}
-.week td.cell{height:66px}
+/* 週表示：1件1行・最大3件（コンパクトは2件）＋「＋○件」。行の高さが件数で大きく変わらないよう固定 */
+.week td.cell{height:86px;padding:2px 3px}
+.week.compact td.cell{height:56px;padding:1px 3px}
+.week .chip.compact{font-size:12px;line-height:1.45;padding:0 4px 0 5px;margin:0 0 2px;border-left-width:3px;border-radius:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.week.compact .chip.compact{line-height:1.3;margin-bottom:1px}
+.week .chip.compact.plan{border-width:1px;border-left-width:3px}
+.week .chip .cat-tag,.week .chip-extra{display:none}
+.week .more{display:block;width:100%;text-align:left;font-size:12px;line-height:1.4;padding:0 4px;border:none;border-radius:2px;background:none;color:var(--primary);font-weight:700}
+.week .more:hover{background:var(--primary-weak)}
+.seg{display:inline-flex}
+.seg button{border-radius:0}
+.seg button:first-child{border-radius:6px 0 0 6px}
+.seg button:last-child{border-radius:0 6px 6px 0;margin-left:-1px}
+#cellPop{position:fixed;z-index:60;background:var(--surface);border:1px solid var(--border-strong);border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.18);padding:.45rem .6rem .6rem;width:min(340px,calc(100vw - 16px));max-height:60vh;overflow:auto}
+#cellPop .pop-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.9rem;margin-bottom:.3rem}
+#cellPop .pop-head button{font-size:1.1rem;padding:0 .4rem}
 .week td.cell.am{border-right:1px dashed var(--border)}
 .week td.cell.pm{border-right:1px solid var(--border-strong)}
 .week td.cell.sat{background:var(--sat)} .week td.cell.sun{background:var(--sun)} .week td.cell.today{background:var(--today)}
@@ -252,8 +267,17 @@ table.tbl{border-collapse:collapse;width:100%;font-size:.92rem}
   .week th.c-name{width:22mm;font-size:9pt}
   .week td.cell{height:auto;min-height:12mm}
   .week tbody tr{break-inside:avoid}
-  .chip{font-size:7.5pt;padding:0 2px;border-left-width:3px;margin:1px 0}
-  .week.dense .chip{font-size:6.5pt}
+  .chip{font-size:8pt;padding:0 2px;border-left-width:3px;margin:1px 0}
+  /* 週表示は省略せず全件・全文を表示。文字サイズは fitWeekPrint() が 9pt〜8pt で調整 */
+  .week td.cell,.week.compact td.cell{height:auto;padding:.3mm .5mm}
+  .week th.c-name{width:18mm}
+  .week .chip.compact{font-size:var(--pf,8.5pt);line-height:1.18;white-space:normal;overflow:visible;text-overflow:clip;margin:0 0 .2mm;padding:0 .3mm 0 .8mm;border-left-width:2.5px}
+  .week .chip-extra{display:block}
+  .week .more{display:none}
+  /* 週表示の印刷では種別名を各件に書かず、色の凡例を上部に1回だけ印刷する */
+  body.print-week #legend.no-print{display:flex!important;padding:0 0 1.5mm;gap:1.2mm}
+  body.print-week .legend-item{font-size:7.5pt;padding:0 1.2mm;border-left-width:2.5mm}
+  body.print-week .legend .slot-info{font-size:7.5pt}
   .day th.c-name{position:static;width:28mm;font-size:10pt}
   .day .chip{font-size:9pt}
   .day td.cell .cell-body{min-height:9mm}
@@ -282,6 +306,7 @@ table.tbl{border-collapse:collapse;width:100%;font-size:.92rem}
     </div>
   </header>
   <div id="filterPanel" class="popover no-print" hidden></div>
+  <div id="cellPop" class="no-print" hidden></div>
   <section id="summary" class="summary no-print"></section>
   <section id="legend" class="legend no-print"></section>
   <section id="toolbar" class="toolbar"></section>
@@ -432,6 +457,7 @@ const S = {
   view: 'month', cursor: new Date(), settingsTab: 'rec', showInactiveSettings: false,
   filters: { hiddenCats: [], hiddenMembers: [], showInactive: false, ...store.get('filters', {}) },
   showWeekend: store.get('showWeekend', false),
+  weekDensity: store.get('weekDensity', 'normal') === 'compact' ? 'compact' : 'normal', // 週表示の表示密度
   unsubs: [], unsubRange: null, rangeKey: null, lastViewKey: null,
 };
 let app, auth, db;
@@ -722,8 +748,12 @@ function chipHtml(e, opt = {}) {
   const c = catById(e.category);
   const color = c?.color || '#888';
   const plan = isPlanDate(e.date);
-  const tip = [`${plan ? '【予定】' : ''}[${c?.name || '?'}] ${e.title || ''}`, e.location && `場所：${e.location}`, e.theme && `関連テーマ：${e.theme}`,
+  const tip = [`${plan ? '【予定】' : ''}${e.slot === 'allday' ? '【終日】' : ''}[${c?.name || '?'}] ${e.title || ''}`, e.location && `場所：${e.location}`, e.theme && `関連テーマ：${e.theme}`,
     e.recurrenceId && '（繰り返し登録）', e.updatedByName && `更新：${e.updatedByName} ${fmtTs(e.updatedAt)}`].filter(Boolean).join('\n');
+  if (opt.compact) { // 週表示用：1件1行（種別は左端の色帯で示し、全文はマウスを乗せると表示）
+    const text = esc(e.title || c?.name || '');
+    return `<span class="chip compact${e.slot === 'allday' ? ' allday' : ''}${plan ? ' plan' : ''}${opt.extra ? ' chip-extra' : ''}" data-ev="${e.id}" style="--c:${color}" title="${esc(tip)}"><span class="cat-tag">${esc(c?.name || '')}</span>${text}</span>`;
+  }
   const slotTag = opt.slot ? `<b class="slot-tag">${SLOT_LABEL[e.slot]}</b>` : (e.slot === 'allday' ? '<b class="slot-tag">終日</b>' : '');
   const who = opt.who ? `<b>${esc(memberName(e.targetId))}</b> ` : '';
   const body = e.title ? `<span class="cat-tag">${esc(c?.name || '')}</span>${esc(e.title)}` : esc(c?.name || '');
@@ -734,6 +764,15 @@ function rawSlotSet(list) {
   const set = new Set();
   for (const e of list) for (const s of e.slot === 'allday' ? ['am', 'pm'] : [e.slot]) set.add(`${e.targetId}|${e.date}|${s}`);
   return set;
+}
+// 週表示の1マス：最大件数を超えた分は「＋○件」にまとめる（印刷時は全件を表示）
+const weekMax = () => S.weekDensity === 'compact' ? 2 : 3;
+function weekCellHtml(idx, t, d, s, cls) {
+  const evs = cellEvents(idx, t, d, s), max = weekMax();
+  const over = evs.length > max ? evs.length - max : 0;
+  const chips = evs.map((e, i) => chipHtml(e, { compact: true, extra: i >= max })).join('');
+  const more = over ? `<button type="button" class="more" data-act="cell-more" data-date="${d}" data-slot="${s}" data-target="${t}" title="このマスの全${evs.length}件を表示">＋${over}件</button>` : '';
+  return `<td class="cell ${cls}" data-date="${d}" data-slot="${s}" data-target="${t}">${chips}${more}</td>`;
 }
 const cellHtml = (idx, t, d, s, cls = '') => `<td class="cell ${cls}" data-date="${d}" data-slot="${s}" data-target="${t}">${cellEvents(idx, t, d, s).map(e => chipHtml(e)).join('')}</td>`;
 const emptyHtml = () => '<div class="card"><p class="muted">表示するメンバーがいません。絞り込み条件を確認するか、設定画面からメンバーを追加してください。</p></div>';
@@ -844,7 +883,8 @@ function renderWeek() {
   const n = S.showWeekend ? 7 : 5;
   const days = [...Array(n)].map((_, i) => ymd(addDays(ws, i)));
   $('#toolbar').innerHTML = navHtml(`${fmtYMD(days[0])} 〜 ${fmtMD(days[n - 1])}`, '週',
-    `<label class="inline"><input type="checkbox" data-act="toggle-weekend" ${S.showWeekend ? 'checked' : ''}> 土日を表示</label><button data-act="print">印刷</button>`);
+    `<span class="seg" role="group" aria-label="表示密度">${[['normal', '標準'], ['compact', 'コンパクト']].map(([k, l]) => `<button data-act="density" data-d="${k}" class="${S.weekDensity === k ? 'active' : ''}">${l}</button>`).join('')}</span>`
+    + `<label class="inline"><input type="checkbox" data-act="toggle-weekend" ${S.showWeekend ? 'checked' : ''}> 土日を表示</label><button data-act="print">印刷</button>`);
   const cols = visibleMembers();
   if (!cols.length) { setViewHtml(emptyHtml(), 'empty'); return; }
   const idx = indexEvents(S.events);
@@ -852,13 +892,13 @@ function renderWeek() {
   const raw = rawSlotSet(S.events);
   // 過去の平日で、その枠に何も記録がなければ「未記録」
   const unrec = (m, d, s) => d < today && !isOffDay(d) && !raw.has(`${m}|${d}|${s}`) ? ' unrec' : '';
-  let h = `<div class="grid-wrap"><table class="grid week${cols.length > 8 ? ' dense' : ''}" style="--days:${n}"><thead><tr><th class="c-name" rowspan="2">メンバー</th>`
+  let h = `<div class="grid-wrap"><table class="grid week${S.weekDensity === 'compact' ? ' compact' : ''}" style="--days:${n}"><thead><tr><th class="c-name" rowspan="2">メンバー</th>`
     + days.map(d => { const hol = holidayName(d); return `<th colspan="2" class="${dayKind(d)}${d === today ? ' today' : ''}">${fmtMD(d)}${hol ? `<small class="hol">${esc(hol)}</small>` : ''}</th>`; }).join('')
     + `</tr><tr class="sub">${days.map(d => `<th class="${dayKind(d)}">午前</th><th class="${dayKind(d)}">午後</th>`).join('')}</tr></thead><tbody>`;
   for (const m of cols) {
     h += `<tr><th class="c-name" style="--mc:${m.color}">${esc(m.name)}</th>${days.map(d => {
       const k = dayKind(d) + (d === today ? ' today' : '');
-      return cellHtml(idx, m.id, d, 'am', 'am ' + k + unrec(m.id, d, 'am')) + cellHtml(idx, m.id, d, 'pm', 'pm ' + k + unrec(m.id, d, 'pm'));
+      return weekCellHtml(idx, m.id, d, 'am', 'am ' + k + unrec(m.id, d, 'am')) + weekCellHtml(idx, m.id, d, 'pm', 'pm ' + k + unrec(m.id, d, 'pm'));
     }).join('')}</tr>`;
   }
   h += '</tbody></table></div>';
@@ -898,6 +938,47 @@ function renderDay() {
   }
   h += '</tbody></table></div>';
   setViewHtml(h, 'day' + d);
+}
+
+// 「＋○件」：そのマスの全件を小さなポップアップで表示する
+function openCellPopover(btn) {
+  const { date, slot, target } = btn.dataset;
+  const evs = cellEvents(indexEvents(S.events), target, date, slot);
+  const pop = $('#cellPop');
+  pop.innerHTML = `<div class="pop-head"><span><b>${esc(memberName(target))}</b>　${fmtMD(date)} ${SLOT_LABEL[slot]}（${evs.length}件）</span><button type="button" class="ghost small" data-act="pop-close" aria-label="閉じる">×</button></div>
+    <div class="pop-list">${evs.map(e => chipHtml(e)).join('')}</div>`;
+  pop.hidden = false;
+  const r = btn.getBoundingClientRect(), w = pop.offsetWidth, h = pop.offsetHeight;
+  pop.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px';
+  pop.style.top = (r.bottom + 4 + h > innerHeight - 8 ? Math.max(8, r.top - h - 4) : r.bottom + 4) + 'px';
+}
+
+// 印刷時：週表示を全件・全文で A4横1枚に収めるため、文字サイズを 9pt〜8pt の範囲で自動調整する。
+// 印刷と同じ幅・文字サイズの見えない枠に各マスの内容を流し込み、実際の折り返しで高さを測る
+function fitWeekPrint() {
+  const tbl = $('#view table.week');
+  document.body.classList.toggle('print-week', !!tbl);
+  if (!tbl) return;
+  const days = +tbl.style.getPropertyValue('--days') || 5;
+  const cellW = (281 - 18) / (days * 2) - 1.2;  // 1マスの幅（mm）：A4横の印刷幅からメンバー列とマスの余白・枠線を引く
+  const avail = 194 - 30;                      // 本文に使える高さ（mm）：タイトル・凡例・日付行を除く
+  const rows = [...tbl.tBodies[0].rows].map(r => [...r.querySelectorAll('td.cell')].map(td => [...td.querySelectorAll('.chip')].map(c => ({ text: c.lastChild?.textContent || '', plan: c.classList.contains('plan') }))));
+  const probe = document.createElement('div');
+  probe.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden';
+  document.body.appendChild(probe);
+  const heightAt = pt => rows.reduce((sum, cells) => {
+    let maxPx = 0;
+    for (const items of cells) {
+      if (!items.length) continue;
+      probe.innerHTML = items.map(t => `<div style="box-sizing:border-box;width:${cellW}mm;font-size:${pt}pt;line-height:1.18;padding:0 .3mm 0 .8mm;border:${t.plan ? 1 : 0}px solid;border-left:2.5px solid;margin:0 0 .2mm;word-break:break-all">${esc(t.text) || '&nbsp;'}</div>`).join('');
+      maxPx = Math.max(maxPx, probe.offsetHeight);
+    }
+    return sum + Math.max(maxPx / 3.7795, 4) + 1;   // px→mm、空の行も最低限の高さ＋行の余白
+  }, 0);
+  let pt = 9;
+  while (pt > 8 && heightAt(pt) > avail) pt -= 0.25;
+  probe.remove();
+  tbl.style.setProperty('--pf', pt + 'pt');
 }
 
 // =====================================================================
@@ -940,7 +1021,7 @@ function bindGlobalEvents() {
   view.addEventListener('pointerdown', e => {
     lastPointer = e.pointerType;
     if (!canEdit()) return; // 閲覧者はドラッグ選択・新規登録不可
-    if (e.pointerType !== 'mouse' || e.button !== 0 || e.target.closest('.chip')) return;
+    if (e.pointerType !== 'mouse' || e.button !== 0 || e.target.closest('.chip, .more')) return;
     const td = e.target.closest('td.cell');
     if (!td) return;
     e.preventDefault();
@@ -958,7 +1039,7 @@ function bindGlobalEvents() {
   });
   document.addEventListener('pointerup', () => { if (sel) finishSel(); });
   view.addEventListener('click', e => { // タッチ操作はタップで1セル入力
-    if (!canEdit() || lastPointer === 'mouse' || e.target.closest('.chip')) return;
+    if (!canEdit() || lastPointer === 'mouse' || e.target.closest('.chip, .more')) return;
     const td = e.target.closest('td.cell');
     if (!td) return;
     const c = cellInfo(td);
@@ -966,8 +1047,10 @@ function bindGlobalEvents() {
   });
 
   document.addEventListener('click', e => {
+    const pop = $('#cellPop');
+    if (!pop.hidden && !e.target.closest('#cellPop') && !e.target.closest('.more')) pop.hidden = true;
     const chip = e.target.closest('[data-ev]');
-    if (chip && !e.target.closest('dialog')) { openEditById(chip.dataset.ev); return; }
+    if (chip && !e.target.closest('dialog')) { pop.hidden = true; openEditById(chip.dataset.ev); return; }
     const v = e.target.closest('[data-view]');
     if (v) { setView(v.dataset.view); return; }
     const a = e.target.closest('[data-act]');
@@ -980,6 +1063,9 @@ function bindGlobalEvents() {
     if (a && a.matches('input')) handleChange(a.dataset.act, a);
   });
   $('#filterPanel').addEventListener('change', onFilterChange);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#cellPop').hidden = true; });
+  $('#view').addEventListener('scroll', () => { $('#cellPop').hidden = true; }, true);
+  window.addEventListener('beforeprint', fitWeekPrint);
   const dlg = $('#dlg');
   dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
 }
@@ -1022,6 +1108,9 @@ function handleAct(act, el) {
       saveFilters(); return renderAll();
     }
     case 'csv': return exportCsv();
+    case 'cell-more': return openCellPopover(el);
+    case 'pop-close': $('#cellPop').hidden = true; return;
+    case 'density': S.weekDensity = el.dataset.d; store.set('weekDensity', S.weekDensity); return renderAll();
     case 'print': return window.print();
     case 'goto-day': S.cursor = parseYmd(el.dataset.date); return setView('day');
     case 'settings-tab':
