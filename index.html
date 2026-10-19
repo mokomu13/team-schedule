@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>開発チーム予定表</title>
+<title>開発チーム業務記録</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap" rel="stylesheet">
@@ -57,18 +57,19 @@ button.filter-on{border-color:var(--primary);color:var(--primary);font-weight:70
 .popover .foot{display:flex;gap:.5rem;justify-content:flex-end;border-top:1px solid var(--border);padding-top:.6rem}
 
 /* サマリー */
-.summary{display:grid;grid-template-columns:minmax(260px,1fr) 2fr;gap:.8rem;padding:.8rem 1rem 0}
+.summary{display:grid;grid-template-columns:minmax(220px,.8fr) minmax(260px,1.1fr) minmax(260px,1.1fr);gap:.8rem;padding:.8rem 1rem 0}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.6rem .9rem}
 .card h3{font-size:.95rem;margin:0 0 .35rem;color:var(--primary)}
 .card summary{cursor:pointer;font-size:.95rem;font-weight:700;color:var(--primary)}
 .abs-list{display:flex;flex-wrap:wrap;gap:.3rem .9rem}
 .abs-item{border-left:4px solid var(--c);padding-left:.4rem}
-.wk-list{max-height:9.5rem;overflow:auto;margin-top:.35rem}
-.wk-day{display:flex;gap:.5rem;padding:.15rem 0;border-bottom:1px dotted var(--border);align-items:flex-start}
-.wk-day > .d{flex:0 0 5.2rem;font-weight:700}
-.wk-day.sat > .d{color:var(--sat-text)} .wk-day.sun > .d{color:var(--sun-text)}
-.wk-day .items{display:flex;flex-wrap:wrap;gap:.2rem .3rem}
-.wk-day .chip{display:inline-block;margin:0}
+button.linklike{border:none;background:none;padding:0;color:var(--primary);font-weight:700;text-decoration:underline;text-underline-offset:2px;font-size:.95rem}
+button.linklike:hover{background:none;color:#1d3f61}
+.st-line{margin:.15rem 0 .45rem}
+.st-miss{color:var(--danger);font-size:.92rem}
+.st-ok{color:#2e6b4a;font-size:.92rem}
+.ab-list{max-height:7.5rem;overflow:auto}
+.ab-line{display:flex;gap:.6rem;align-items:baseline;flex-wrap:wrap;padding:.1rem 0}
 .notice{grid-column:1/-1;background:var(--warn-bg);border:1px solid #ecd28c;border-radius:8px;padding:.45rem .9rem;color:var(--warn);display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
 
 /* 凡例 */
@@ -99,7 +100,7 @@ body.readonly .grid td.cell:hover{box-shadow:none}
 .badge.view-only{background:#e8eaed;color:#3d4753;font-weight:700}
 .hol{display:block;font-size:.72rem;color:var(--sun-text);font-weight:400;line-height:1.2}
 
-/* 予定チップ */
+/* 記録チップ */
 .chip{display:block;margin:2px 0;padding:1px 6px;border-left:4px solid var(--c);background:color-mix(in srgb,var(--c) 14%,#fff);border-radius:3px;font-size:.88rem;line-height:1.35;cursor:pointer;word-break:break-all;color:var(--text)}
 .chip:hover{background:color-mix(in srgb,var(--c) 26%,#fff)}
 .chip.allday{background:color-mix(in srgb,var(--c) 24%,#fff)}
@@ -107,6 +108,13 @@ body.readonly .grid td.cell:hover{box-shadow:none}
 .chip .slot-tag{font-size:.75em;color:var(--c);margin-right:.3em}
 .chip .loc{font-size:.78em;color:var(--muted);margin-left:.3em}
 .chip .rep{font-size:.78em;color:var(--muted);margin-left:.3em}
+/* 明日以降の項目（予定）は点線で区別する */
+.chip.plan{background:#fff;border:1px dashed var(--c);border-left:4px dashed var(--c)}
+.chip .plan-tag{font-size:.7em;border:1px solid var(--c);color:var(--c);border-radius:3px;padding:0 .25em;margin-right:.3em;vertical-align:1px}
+/* 過去の平日で記録がない枠 */
+.week td.cell.unrec{background-image:repeating-linear-gradient(135deg,transparent 0 6px,rgba(0,0,0,.035) 6px 12px)}
+.week td.cell.unrec::before{content:'未記録';color:#9aa3ae;font-size:.72rem}
+.unrec-label{color:#9aa3ae;font-size:.85rem}
 
 /* 月表示 */
 .month{min-width:calc(var(--dw) + var(--sw) + var(--cols) * 140px)}
@@ -135,17 +143,15 @@ body.readonly .grid td.cell:hover{box-shadow:none}
 .week td.cell.pm{border-right:1px solid var(--border-strong)}
 .week td.cell.sat{background:var(--sat)} .week td.cell.sun{background:var(--sun)} .week td.cell.today{background:var(--today)}
 
-/* リスト表示 */
-.list-view{display:flex;flex-direction:column;gap:.5rem}
-.day-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.45rem .7rem}
-.day-card header{display:flex;align-items:center;gap:.6rem;font-weight:700}
-.day-card.sat header{color:var(--sat-text)} .day-card.sun header{color:var(--sun-text)}
-.day-card.sat{background:var(--sat)} .day-card.sun{background:var(--sun)}
-.day-card.today{border:2px solid var(--primary)}
-.day-card header button{margin-left:auto}
-.lv-row{display:flex;gap:.6rem;padding:.2rem 0;border-top:1px dotted var(--border)}
-.lv-name{flex:0 0 4.5rem;font-weight:700;border-left:4px solid var(--mc);padding-left:.35rem}
-.lv-evs{flex:1;min-width:0}
+/* 日別表示 */
+.day{min-width:560px}
+.day th.c-name{position:sticky;left:0;width:120px;z-index:2;background:var(--surface2);text-align:left;vertical-align:middle;padding:.45rem .6rem;border-left:5px solid var(--mc);border-top:none}
+.day thead th.c-name{z-index:5;border-left:none}
+.day td.cell{padding:4px 6px;height:auto}
+.day td.cell .cell-body{min-height:40px}
+.day .chip{font-size:.95rem;padding:2px 8px}
+.toolbar .rec-count{font-size:.95rem}
+.hol.hol-inline{display:inline;font-size:.8rem}
 
 /* ダイアログ */
 dialog{border:none;border-radius:10px;padding:0;width:min(680px,96vw);max-height:94vh;box-shadow:0 10px 40px rgba(0,0,0,.25);color:var(--text)}
@@ -217,10 +223,19 @@ table.tbl{border-collapse:collapse;width:100%;font-size:.92rem}
   .row > label{padding-top:0}
   .month{min-width:calc(var(--dw) + var(--sw) + var(--cols) * 110px)}
   .legend .slot-info{margin-left:0;width:100%}
+  /* 日別表示はメンバーごとに縦に並べる */
+  .day{min-width:0}
+  .day thead{display:none}
+  .day,.day tbody,.day tr,.day th.c-name,.day td.cell{display:block;width:100%}
+  .day tr{border-bottom:2px solid var(--border-strong)}
+  .day th.c-name{position:static;border-right:none}
+  .day td.cell{display:grid;grid-template-columns:2.8rem 1fr;gap:.4rem;border-right:none}
+  .day td.cell::before{content:attr(data-label);color:var(--muted);font-size:.8rem;padding-top:.2rem}
+  .day td.cell .cell-body{min-height:0}
+  .toolbar input[type=date]{max-width:9.5rem}
 }
 
 /* 印刷（A4横） */
-@page{size:A4 landscape;margin:8mm}
 @media print{
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   body{background:#fff;font-size:9pt}
@@ -239,19 +254,24 @@ table.tbl{border-collapse:collapse;width:100%;font-size:.92rem}
   .week tbody tr{break-inside:avoid}
   .chip{font-size:7.5pt;padding:0 2px;border-left-width:3px;margin:1px 0}
   .week.dense .chip{font-size:6.5pt}
+  .day th.c-name{position:static;width:28mm;font-size:10pt}
+  .day .chip{font-size:9pt}
+  .day td.cell .cell-body{min-height:9mm}
+  .toolbar input{display:none}
   .grid td.cell:hover{box-shadow:none}
 }
 </style>
+<style id="pageStyle">@page{size:A4 landscape;margin:8mm}</style>
 </head>
 <body>
 
 <div id="app" hidden>
   <header class="app-header no-print">
-    <h1 id="appTitle">開発チーム予定表</h1>
+    <h1 id="appTitle">開発チーム業務記録</h1>
     <nav class="tabs">
-      <button data-view="month">月表示</button>
       <button data-view="week">週表示</button>
-      <button data-view="list">リスト</button>
+      <button data-view="day">日別</button>
+      <button data-view="month">月表示</button>
     </nav>
     <div class="header-actions">
       <button id="btnFilter" data-act="filter">絞り込み</button>
@@ -284,7 +304,7 @@ const FIREBASE_CONFIG = {
   messagingSenderId: "271713705149",
   appId: "1:271713705149:web:7b54a3610a0c605e13abd4",
 };
-const APP_TITLE = '開発チーム予定表';
+const APP_TITLE = '開発チーム業務記録';
 
 // 初期セットアップ画面で使う初期メンバー（後から設定画面で変更可）
 const INITIAL_MEMBERS = [
@@ -316,7 +336,7 @@ const LOCATIONS = ['社内', '社外（近隣）', '出張'];
 // 予定入力ダイアログに常に表示する注意書き
 const CONFIDENTIAL_NOTICE = '顧客名・出張先・実験条件や結果は記入しないでください（例：顧客訪問、出張、○○テーマ実験）';
 const MEMBER_COLORS =['#2c5a85', '#2e7d6b', '#a0522d', '#6a5a9c', '#b5485d', '#8a6d3b', '#3d7a9c', '#5f7a5a', '#9c4f7a', '#4f5b9c'];
-const EXPIRY_WARN_DAYS = 30;   // 繰り返し予定の「終了間近」とみなす日数
+const ABSENCE_AHEAD_DAYS = 14; // 「今後の不在予定」に表示する日数
 const BULK_CONFIRM = 200;      // これを超える件数を一度に登録するときは確認する
 
 // =====================================================================
@@ -346,7 +366,6 @@ const pad = n => String(n).padStart(2, '0');
 const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const parseYmd = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
 const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
-const addMonths = (d, n) => new Date(d.getFullYear(), d.getMonth() + n, d.getDate());
 const addYears = (d, n) => new Date(d.getFullYear() + n, d.getMonth(), d.getDate());
 const startOfWeek = d => addDays(d, -((d.getDay() + 6) % 7)); // 月曜始まり
 const dayNum = s => { const [y, m, d] = s.split('-').map(Number); return Date.UTC(y, m - 1, d) / 864e5; };
@@ -409,7 +428,7 @@ const isOffDay = s => dayKind(s) !== '';
 // =====================================================================
 const S = {
   user: null, email: '', allowed: null, config: null,
-  members: [], viewers: [], events: [], weekEvents: [], recurrences: [], history: [], historyLoaded: false, legacyAllowed: [],
+  members: [], viewers: [], events: [], nearEvents: [], recurrences: [], history: [], historyLoaded: false, legacyAllowed: [],
   view: 'month', cursor: new Date(), settingsTab: 'rec', showInactiveSettings: false,
   filters: { hiddenCats: [], hiddenMembers: [], showInactive: false, ...store.get('filters', {}) },
   showWeekend: store.get('showWeekend', false),
@@ -490,7 +509,7 @@ async function handleAuth(user) {
   let allowed = null;
   try { allowed = await getDoc(doc(db, 'allowedUsers', S.email)); } catch (e) { console.warn(e); }
   if (!allowed?.exists()) {
-    showScreen(`<h2>メンバーとして登録されていません</h2><p>${esc(user.email)} はまだメンバーとして登録されていないため、予定を表示できません。<br><b>管理者に登録を依頼してください。</b></p><p class="hint">登録が済んだら、もう一度ログインしてください。</p>${logoutBtn}`);
+    showScreen(`<h2>メンバーとして登録されていません</h2><p>${esc(user.email)} はまだメンバーとして登録されていないため、記録を表示できません。<br><b>管理者に登録を依頼してください。</b></p><p class="hint">登録が済んだら、もう一度ログインしてください。</p>${logoutBtn}`);
     return;
   }
   S.allowed = allowed.data();
@@ -602,8 +621,7 @@ const docsOf = snap => snap.docs.map(d => ({ id: d.id, ...d.data() }));
 function startApp() {
   $('#screen').hidden = true;
   $('#app').hidden = false;
-  S.view = store.get('view', innerWidth < 768 ? 'list' : 'month');
-  if (!['month', 'week', 'list'].includes(S.view)) S.view = 'month';
+  S.view = innerWidth < 768 ? 'day' : 'week'; // ログイン後は PC＝週表示、スマホ＝日別
   S.cursor = new Date();
   const startRole = myRole();
   listen(onSnapshot(doc(db, 'allowedUsers', S.email), snap => {
@@ -619,13 +637,15 @@ function startApp() {
   listen(onSnapshot(cfgRef(), snap => { if (snap.exists()) { S.config = normalizeConfig(snap.data()); holidayCache.clear(); renderAll(); } }, onErr));
   listen(onSnapshot(query(collection(db, 'members'), orderBy('order')), snap => { S.members = docsOf(snap); renderAll(); }, onErr));
   listen(onSnapshot(collection(db, 'recurrences'), snap => { S.recurrences = docsOf(snap); renderAll(); }, onErr));
-  const ws = startOfWeek(new Date());
-  listen(onSnapshot(rangeQuery(ymd(ws), ymd(addDays(ws, 6))), snap => { S.weekEvents = docsOf(snap); renderAll(); }, onErr));
+  // トップの欄（今日の不在者・記録状況・今後の不在予定）用：前後2週間分
+  const now = new Date();
+  listen(onSnapshot(rangeQuery(ymd(addDays(now, -14)), ymd(addDays(now, ABSENCE_AHEAD_DAYS))), snap => { S.nearEvents = docsOf(snap); renderAll(); }, onErr));
   subscribeRange();
   renderAll();
 }
 
 function viewRange() {
+  if (S.view === 'day') { const d = ymd(S.cursor); return { start: d, end: d }; }
   if (S.view === 'week') { const ws = startOfWeek(S.cursor); return { start: ymd(ws), end: ymd(addDays(ws, 6)) }; }
   const y = S.cursor.getFullYear(), m = S.cursor.getMonth();
   return { start: ymd(new Date(y, m, 1)), end: ymd(new Date(y, m + 1, 0)) };
@@ -648,7 +668,7 @@ let renderTimer = 0;
 function renderAll() { if (!renderTimer) renderTimer = setTimeout(() => { renderTimer = 0; doRender(); }, 0); }
 function doRender() {
   if (!S.config || $('#app').hidden) return;
-  if (S.view === 'settings' && isViewer()) S.view = 'month';
+  if (S.view === 'settings' && isViewer()) S.view = 'week';
   $('#userName').innerHTML = esc(myName()) + (isAdmin() ? '（管理者）' : '') + (isViewer() ? '<span class="badge view-only">閲覧専用</span>' : '');
   $('.app-header [data-view=settings]').hidden = isViewer();
   document.body.classList.toggle('readonly', !canEdit());
@@ -661,8 +681,9 @@ function doRender() {
   renderLegend();
   if (S.view === 'month') renderMonth();
   else if (S.view === 'week') renderWeek();
-  else if (S.view === 'list') renderList();
+  else if (S.view === 'day') renderDay();
   else renderSettings();
+  $('#pageStyle').textContent = `@page{size:A4 ${S.view === 'day' ? 'portrait' : 'landscape'};margin:8mm}`; // 日別はA4縦、他はA4横で印刷
   if (!$('#filterPanel').hidden) renderFilter();
 }
 
@@ -694,61 +715,94 @@ function indexEvents(list) {
 function cmpEvent(a, b) {
   return (SLOT_RANK[a.slot] - SLOT_RANK[b.slot]) || ((catById(a.category)?.order ?? 99) - (catById(b.category)?.order ?? 99)) || (a.title || '').localeCompare(b.title || '', 'ja');
 }
-// 終日の予定は午前・午後の両方のセルに表示する
+// 終日の記録は午前・午後の両方のセルに表示する
 const cellEvents = (idx, t, d, s) => (idx.get(t + '|' + d) || []).filter(e => e.slot === s || e.slot === 'allday');
 
 function chipHtml(e, opt = {}) {
   const c = catById(e.category);
   const color = c?.color || '#888';
-  const tip = [`[${c?.name || '?'}] ${e.title || ''}`, e.location && `場所：${e.location}`, e.theme && `関連テーマ：${e.theme}`,
-    e.recurrenceId && '（繰り返し予定）', e.updatedByName && `更新：${e.updatedByName} ${fmtTs(e.updatedAt)}`].filter(Boolean).join('\n');
+  const plan = isPlanDate(e.date);
+  const tip = [`${plan ? '【予定】' : ''}[${c?.name || '?'}] ${e.title || ''}`, e.location && `場所：${e.location}`, e.theme && `関連テーマ：${e.theme}`,
+    e.recurrenceId && '（繰り返し登録）', e.updatedByName && `更新：${e.updatedByName} ${fmtTs(e.updatedAt)}`].filter(Boolean).join('\n');
   const slotTag = opt.slot ? `<b class="slot-tag">${SLOT_LABEL[e.slot]}</b>` : (e.slot === 'allday' ? '<b class="slot-tag">終日</b>' : '');
   const who = opt.who ? `<b>${esc(memberName(e.targetId))}</b> ` : '';
   const body = e.title ? `<span class="cat-tag">${esc(c?.name || '')}</span>${esc(e.title)}` : esc(c?.name || '');
-  return `<span class="chip${e.slot === 'allday' ? ' allday' : ''}" data-ev="${e.id}" style="--c:${color}" title="${esc(tip)}">${slotTag}${who}${body}${e.location ? `<span class="loc">@${esc(e.location)}</span>` : ''}${e.recurrenceId ? '<span class="rep" title="繰り返し予定">↻</span>' : ''}</span>`;
+  return `<span class="chip${e.slot === 'allday' ? ' allday' : ''}${plan ? ' plan' : ''}" data-ev="${e.id}" style="--c:${color}" title="${esc(tip)}">${plan ? '<span class="plan-tag">予定</span>' : ''}${slotTag}${who}${body}${e.location ? `<span class="loc">@${esc(e.location)}</span>` : ''}${e.recurrenceId ? '<span class="rep" title="繰り返し登録">↻</span>' : ''}</span>`;
+}
+// フィルタに関係なく「その枠に何か記録があるか」を判定するための集合（終日は午前・午後の両方）
+function rawSlotSet(list) {
+  const set = new Set();
+  for (const e of list) for (const s of e.slot === 'allday' ? ['am', 'pm'] : [e.slot]) set.add(`${e.targetId}|${e.date}|${s}`);
+  return set;
 }
 const cellHtml = (idx, t, d, s, cls = '') => `<td class="cell ${cls}" data-date="${d}" data-slot="${s}" data-target="${t}">${cellEvents(idx, t, d, s).map(e => chipHtml(e)).join('')}</td>`;
 const emptyHtml = () => '<div class="card"><p class="muted">表示するメンバーがいません。絞り込み条件を確認するか、設定画面からメンバーを追加してください。</p></div>';
 
-// ---------- サマリー（今日の不在者・今週の予定） ----------
+// ---------- サマリー（今日の不在者・記録状況・今後の不在予定） ----------
+function prevBusinessDay(d) {
+  let x = addDays(parseYmd(d), -1);
+  for (let i = 0; i < 14 && isOffDay(ymd(x)); i++) x = addDays(x, -1);
+  return ymd(x);
+}
+// 同じ人・種別・区分の不在が連続（間が休日だけでも可）していれば1行にまとめる
+function groupAbsences(list) {
+  const key = e => [e.targetId, e.category, e.slot].join('|');
+  const sorted = [...list].sort((a, b) => key(a).localeCompare(key(b)) || a.date.localeCompare(b.date));
+  const groups = [];
+  for (const e of sorted) {
+    const g = groups[groups.length - 1];
+    const adjacent = g && g.key === key(e) && dateRange(ymd(addDays(parseYmd(g.to), 1)), e.date).slice(0, -1).every(isOffDay);
+    if (adjacent) g.to = e.date;
+    else groups.push({ key: key(e), targetId: e.targetId, category: e.category, slot: e.slot, from: e.date, to: e.date });
+  }
+  const order = id => memberById(id)?.order ?? 0;
+  return groups.sort((a, b) => a.from.localeCompare(b.from) || order(a.targetId) - order(b.targetId));
+}
 function renderSummary() {
   const el = $('#summary');
   if (S.view === 'settings') { el.hidden = true; return; }
   el.hidden = false;
   const today = todayStr();
+  const active = activeMembers();
+  const activeIds = new Set(active.map(m => m.id));
   const absCats = new Set(S.config.categories.filter(c => c.isAbsence).map(c => c.id));
+
+  // 今日の不在者
   const byMember = new Map();
-  for (const e of S.weekEvents.filter(e => e.date === today && absCats.has(e.category)).sort(cmpEvent)) {
-    const m = memberById(e.targetId);
-    if (!m || m.active === false) continue;
-    if (!byMember.has(m.id)) byMember.set(m.id, []);
-    byMember.get(m.id).push(e);
+  for (const e of S.nearEvents.filter(e => e.date === today && absCats.has(e.category) && activeIds.has(e.targetId)).sort(cmpEvent)) {
+    if (!byMember.has(e.targetId)) byMember.set(e.targetId, []);
+    byMember.get(e.targetId).push(e);
   }
   const absHtml = byMember.size
     ? [...byMember.entries()].sort((a, b) => byOrder(memberById(a[0]), memberById(b[0]))).map(([id, evs]) => {
         const m = memberById(id);
-        return `<span class="abs-item" style="--c:${m.color}"><b>${esc(m.name)}</b>：${evs.map(e => `${esc(catName(e.category))}（${SLOT_LABEL[e.slot]}）${e.title ? ' ' + esc(e.title) : ''}`).join('、')}</span>`;
+        return `<span class="abs-item" style="--c:${m.color}"><b>${esc(m.name)}</b>：${evs.map(e => `${esc(catName(e.category))}（${SLOT_LABEL[e.slot]}）`).join('、')}</span>`;
       }).join('')
     : '<span class="muted">なし</span>';
 
-  const ws = startOfWeek(new Date());
-  const days = [...Array(7)].map((_, i) => ymd(addDays(ws, i)));
-  const vis = new Set(visibleMembers().map(m => m.id));
-  const order = id => memberById(id)?.order ?? 0;
-  const wk = days.map(d => {
-    const evs = S.weekEvents.filter(e => e.date === d && passCat(e) && vis.has(e.targetId))
-      .sort((a, b) => order(a.targetId) - order(b.targetId) || cmpEvent(a, b));
-    if (!evs.length) return '';
-    return `<div class="wk-day ${dayKind(d)}"><span class="d">${fmtMD(d)}</span><div class="items">${evs.map(e => chipHtml(e, { slot: true, who: true })).join('')}</div></div>`;
-  }).join('');
+  // 記録状況（今日と前営業日。休暇・出張なども記録済みとして数える）
+  const statusLine = (label, d) => {
+    const head = `<button class="linklike" data-act="goto-day" data-date="${d}" title="日別表示で開く">${label} ${fmtMD(d)}</button>`;
+    if (isOffDay(d)) return `<div class="st-line">${head} <span class="muted">休日</span></div>`;
+    const done = new Set(S.nearEvents.filter(e => e.date === d).map(e => e.targetId));
+    const missing = active.filter(m => !done.has(m.id));
+    return `<div class="st-line">${head} 記録済み <b>${active.length - missing.length}/${active.length}</b>人
+      ${missing.length ? `<div class="st-miss">未記録：${missing.map(m => esc(m.name)).join('、')}</div>` : '<div class="st-ok">全員記録済み</div>'}</div>`;
+  };
 
-  const exp = expiringRecurrences();
+  // 今後の不在予定
+  const limitDay = ymd(addDays(new Date(), ABSENCE_AHEAD_DAYS));
+  const ahead = groupAbsences(S.nearEvents.filter(e => e.date > today && e.date <= limitDay && absCats.has(e.category) && activeIds.has(e.targetId)));
+  const aheadHtml = ahead.length
+    ? ahead.map(g => `<div class="ab-line"><button class="linklike" data-act="goto-day" data-date="${g.from}">${g.from === g.to ? fmtMD(g.from) : `${fmtMD(g.from)}〜${fmtMD(g.to)}`}</button>
+        <span class="abs-item" style="--c:${memberById(g.targetId).color}"><b>${esc(memberName(g.targetId))}</b> ${esc(catName(g.category))}（${SLOT_LABEL[g.slot]}）</span></div>`).join('')
+    : '<span class="muted">なし</span>';
+
   el.innerHTML = `
     <div class="card"><h3>今日の不在者（${fmtMD(today)}）</h3><div class="abs-list">${absHtml}</div></div>
-    <div class="card"><details id="wkDetails" ${store.get('wkOpen', true) ? 'open' : ''}><summary>今週の予定（${fmtMD(days[0])}〜${fmtMD(days[6])}）</summary>
-      <div class="wk-list">${wk || '<p class="muted">予定はありません</p>'}</div></details></div>
-    ${isAdmin() && needsMigration() ? `<div class="notice">旧形式の権限データ（isAdmin）が ${S.legacyAllowed.length + legacyMembers().length} 件あります。役割（role）形式への移行を実行してください。<button class="small" data-act="migrate">移行する</button></div>` : ''}
-    ${canEdit() && exp.length ? `<div class="notice">終了日が${EXPIRY_WARN_DAYS}日以内の繰り返し予定が ${exp.length} 件あります。<button class="small" data-act="goto-rec">確認・延長する</button></div>` : ''}`;
+    <div class="card"><h3>記録状況</h3>${statusLine('今日', today)}${statusLine('前営業日', prevBusinessDay(today))}</div>
+    <div class="card"><h3>今後の不在予定（${ABSENCE_AHEAD_DAYS}日間）</h3><div class="ab-list">${aheadHtml}</div></div>
+    ${isAdmin() && needsMigration() ? `<div class="notice">旧形式の権限データ（isAdmin）が ${S.legacyAllowed.length + legacyMembers().length} 件あります。役割（role）形式への移行を実行してください。<button class="small" data-act="migrate">移行する</button></div>` : ''}`;
 }
 
 function renderLegend() {
@@ -795,41 +849,55 @@ function renderWeek() {
   if (!cols.length) { setViewHtml(emptyHtml(), 'empty'); return; }
   const idx = indexEvents(S.events);
   const today = todayStr();
+  const raw = rawSlotSet(S.events);
+  // 過去の平日で、その枠に何も記録がなければ「未記録」
+  const unrec = (m, d, s) => d < today && !isOffDay(d) && !raw.has(`${m}|${d}|${s}`) ? ' unrec' : '';
   let h = `<div class="grid-wrap"><table class="grid week${cols.length > 8 ? ' dense' : ''}" style="--days:${n}"><thead><tr><th class="c-name" rowspan="2">メンバー</th>`
     + days.map(d => { const hol = holidayName(d); return `<th colspan="2" class="${dayKind(d)}${d === today ? ' today' : ''}">${fmtMD(d)}${hol ? `<small class="hol">${esc(hol)}</small>` : ''}</th>`; }).join('')
     + `</tr><tr class="sub">${days.map(d => `<th class="${dayKind(d)}">午前</th><th class="${dayKind(d)}">午後</th>`).join('')}</tr></thead><tbody>`;
   for (const m of cols) {
     h += `<tr><th class="c-name" style="--mc:${m.color}">${esc(m.name)}</th>${days.map(d => {
       const k = dayKind(d) + (d === today ? ' today' : '');
-      return cellHtml(idx, m.id, d, 'am', 'am ' + k) + cellHtml(idx, m.id, d, 'pm', 'pm ' + k);
+      return cellHtml(idx, m.id, d, 'am', 'am ' + k + unrec(m.id, d, 'am')) + cellHtml(idx, m.id, d, 'pm', 'pm ' + k + unrec(m.id, d, 'pm'));
     }).join('')}</tr>`;
   }
   h += '</tbody></table></div>';
   setViewHtml(h, 'week' + days[0] + n);
 }
 
-// ---------- リスト表示（スマホ向け） ----------
-function renderList() {
-  const { start, end } = viewRange();
-  const cur = parseYmd(start);
-  $('#toolbar').innerHTML = navHtml(`${cur.getFullYear()}年${cur.getMonth() + 1}月`, '月');
-  const cols = visibleMembers();
-  const idx = indexEvents(S.events);
+// ---------- 日別表示（その日、誰が何をしたか） ----------
+function renderDay() {
+  const d = ymd(S.cursor);
+  const hol = holidayName(d);
   const today = todayStr();
-  let h = '<div class="list-view">';
-  for (const d of dateRange(start, end)) {
-    const hol = holidayName(d);
-    const rows = cols.map(m => {
-      const evs = idx.get(m.id + '|' + d) || [];
-      return evs.length ? `<div class="lv-row"><span class="lv-name" style="--mc:${m.color}">${esc(m.name)}</span><div class="lv-evs">${evs.map(e => chipHtml(e, { slot: true })).join('')}</div></div>` : '';
-    }).join('');
-    h += `<section class="day-card ${dayKind(d)}${d === today ? ' today' : ''}"${d === today ? ' id="todayCard"' : ''}><header>${fmtMD(d)}${hol ? `<small class="hol">${esc(hol)}</small>` : ''}${canEdit() ? `<button class="small" data-act="add-day" data-date="${d}">＋ 追加</button>` : ''}</header>${rows || '<p class="muted" style="margin:.2rem 0">予定なし</p>'}</section>`;
+  const workday = d <= today && !isOffDay(d);
+  const active = activeMembers();
+  const done = new Set(S.events.filter(e => e.date === d).map(e => e.targetId));
+  const countHtml = workday ? `<span class="rec-count">記録済み <b>${active.filter(m => done.has(m.id)).length}/${active.length}</b>人</span>`
+    : isPlanDate(d) ? '<span class="rec-count muted">先の日付（予定）</span>' : '';
+  $('#toolbar').innerHTML = navHtml(`${fmtYMD(d)}${hol ? ` <small class="hol hol-inline">${esc(hol)}</small>` : ''}`, '日',
+    `${countHtml}<input type="date" data-act="pick-date" value="${d}" aria-label="日付を選ぶ"><button data-act="print">印刷</button>`);
+  const cols = visibleMembers();
+  if (!cols.length) { setViewHtml(emptyHtml(), 'empty'); return; }
+  const idx = indexEvents(S.events);
+  const raw = rawSlotSet(S.events);
+  const cell = (m, s, inner, extra = '') => `<td class="cell ${s}"${extra} data-label="${SLOT_LABEL[s]}" data-date="${d}" data-slot="${s === 'allday' ? 'am' : s}" data-target="${m.id}"><div class="cell-body">${inner}</div></td>`;
+  let h = `<div class="grid-wrap day-wrap"><table class="grid day ${dayKind(d)}"><thead><tr><th class="c-name">メンバー</th><th>午前</th><th>午後</th></tr></thead><tbody>`;
+  for (const m of cols) {
+    const evs = idx.get(m.id + '|' + d) || [];
+    h += `<tr><th class="c-name" style="--mc:${m.color}">${esc(m.name)}</th>`;
+    if (evs.length && evs.every(e => e.slot === 'allday')) {
+      h += cell(m, 'allday', evs.map(e => chipHtml(e)).join(''), ' colspan="2"');
+    } else {
+      for (const s of ['am', 'pm']) {
+        const chips = cellEvents(idx, m.id, d, s).map(e => chipHtml(e)).join('');
+        h += cell(m, s, chips || (workday && !raw.has(`${m.id}|${d}|${s}`) ? '<span class="unrec-label">未記録</span>' : ''));
+      }
+    }
+    h += '</tr>';
   }
-  h += '</div>';
-  const key = 'list' + start;
-  const fresh = S.lastViewKey !== key;
-  setViewHtml(h, key);
-  if (fresh) $('#todayCard')?.scrollIntoView({ block: 'start' });
+  h += '</tbody></table></div>';
+  setViewHtml(h, 'day' + d);
 }
 
 // =====================================================================
@@ -911,25 +979,26 @@ function bindGlobalEvents() {
     const a = e.target.closest('[data-act]');
     if (a && a.matches('input')) handleChange(a.dataset.act, a);
   });
-  document.addEventListener('toggle', e => { if (e.target.id === 'wkDetails') store.set('wkOpen', e.target.open); }, true);
   $('#filterPanel').addEventListener('change', onFilterChange);
   const dlg = $('#dlg');
   dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
 }
 
 function setView(v) {
-  if (v === 'week' && S.view !== 'week') {
-    const t = new Date();
-    if (S.cursor.getFullYear() === t.getFullYear() && S.cursor.getMonth() === t.getMonth()) S.cursor = t;
+  if (v !== 'settings' && S.view !== 'settings' && v !== S.view) {
+    // 表示を切り替えるとき、今日が今の表示範囲に入っていれば今日を、入っていなければ範囲の先頭を基準にする
+    const { start, end } = viewRange(), t = todayStr();
+    S.cursor = t >= start && t <= end ? new Date() : parseYmd(start);
   }
   S.view = v;
-  if (v !== 'settings') store.set('view', v);
   if (v === 'settings' && S.settingsTab === 'history' && !S.historyLoaded) loadHistory();
   subscribeRange();
   renderAll();
 }
 function nav(dir) {
-  S.cursor = S.view === 'week' ? addDays(S.cursor, 7 * dir) : new Date(S.cursor.getFullYear(), S.cursor.getMonth() + dir, 1);
+  if (S.view === 'day') S.cursor = addDays(S.cursor, dir);
+  else if (S.view === 'week') S.cursor = addDays(S.cursor, 7 * dir);
+  else S.cursor = new Date(S.cursor.getFullYear(), S.cursor.getMonth() + dir, 1);
   subscribeRange();
   renderAll();
 }
@@ -954,13 +1023,11 @@ function handleAct(act, el) {
     }
     case 'csv': return exportCsv();
     case 'print': return window.print();
-    case 'add-day': if (!canEdit()) return; return openEventDialog({ mode: 'new', targets: [me()?.id || visibleMembers()[0]?.id].filter(Boolean), from: el.dataset.date, to: el.dataset.date, slot: 'am' });
-    case 'goto-rec': S.settingsTab = 'rec'; return setView('settings');
+    case 'goto-day': S.cursor = parseYmd(el.dataset.date); return setView('day');
     case 'settings-tab':
       S.settingsTab = el.dataset.tab;
       if (S.settingsTab === 'history' && !S.historyLoaded) loadHistory();
       return renderAll();
-    case 'rec-extend': return openExtendDialog(S.recurrences.find(r => r.id === id));
     case 'rec-stop': return guardedAction(() => stopRecurrence(S.recurrences.find(r => r.id === id)));
     case 'hist-reload': return loadHistory();
     case 'hist-del': return guardedAction(() => deleteHistory(id));
@@ -976,7 +1043,8 @@ function handleAct(act, el) {
   }
 }
 function handleChange(act, el) {
-  if (act === 'toggle-weekend') { S.showWeekend = el.checked; store.set('showWeekend', S.showWeekend); renderAll(); }
+  if (act === 'pick-date') { if (el.value) { S.cursor = parseYmd(el.value); subscribeRange(); renderAll(); } }
+  else if (act === 'toggle-weekend') { S.showWeekend = el.checked; store.set('showWeekend', S.showWeekend); renderAll(); }
   else if (act === 'toggle-inactive-settings') { S.showInactiveSettings = el.checked; renderAll(); }
 }
 
@@ -987,7 +1055,7 @@ function renderFilter() {
   $('#filterPanel').innerHTML = `
     <h4>種別</h4><div class="opts">${cats().map(c => `<label class="inline"><input type="checkbox" data-f="cat" value="${c.id}" ${f.hiddenCats.includes(c.id) ? '' : 'checked'}> <span class="swatch" style="background:${c.color}"></span>${esc(c.name)}</label>`).join('')}</div>
     <h4>メンバー</h4><div class="opts">${ms.map(m => `<label class="inline"><input type="checkbox" data-f="member" value="${m.id}" ${f.hiddenMembers.includes(m.id) ? '' : 'checked'}> ${esc(m.name)}${m.active === false ? '（非表示）' : ''}</label>`).join('')}</div>
-    <div class="opts"><label class="inline"><input type="checkbox" data-f="inactive" ${f.showInactive ? 'checked' : ''}> 非表示のメンバーも表示する（過去の予定の確認用）</label></div>
+    <div class="opts"><label class="inline"><input type="checkbox" data-f="inactive" ${f.showInactive ? 'checked' : ''}> 非表示のメンバーも表示する（過去の記録の確認用）</label></div>
     <div class="foot"><button data-act="filter-reset">すべて表示</button><button class="primary" data-act="filter-close">閉じる</button></div>`;
 }
 function onFilterChange(e) {
@@ -1061,11 +1129,14 @@ function addHistory(b, h) {
 // =====================================================================
 const EV_FIELDS = ['date', 'targetId', 'slot', 'category', 'title', 'location', 'theme'];
 const pickEv = e => Object.fromEntries(EV_FIELDS.map(k => [k, e[k] ?? '']));
+// 今日以前の日付＝実施記録、明日以降＝予定（出張・休暇など）。データには区別を持たず日付で判定する
+const isPlanDate = d => d > todayStr();
+const kindLabel = (from, to = from) => isPlanDate(from) ? '予定' : isPlanDate(to) ? '実施記録・予定' : '実施記録';
 const describeEv = e => `${memberName(e.targetId)} ${fmtMD(e.date)} ${SLOT_LABEL[e.slot]} [${catName(e.category)}] ${e.title || ''}`.trim();
 const recDesc = r => `毎週${WD_ORDER.filter(w => r.weekdays.includes(w)).map(w => WD[w]).join('・')} ${SLOT_LABEL[r.slot]}`;
 
 function openEditById(id) {
-  const ev = S.events.find(e => e.id === id) || S.weekEvents.find(e => e.id === id);
+  const ev = S.events.find(e => e.id === id) || S.nearEvents.find(e => e.id === id);
   if (!ev) return;
   if (canEdit()) openEventDialog({ mode: 'edit', event: ev });
   else openDetailDialog(ev);
@@ -1077,15 +1148,15 @@ function openDetailDialog(ev) {
   const rec = ev.recurrenceId ? S.recurrences.find(r => r.id === ev.recurrenceId) : null;
   const row = (label, v) => `<div class="row"><label>${label}</label><div class="fld" style="padding-top:.35rem">${v || '<span class="muted">—</span>'}</div></div>`;
   openDialog(`<div class="form">
-    <h3>予定の詳細</h3>
+    <h3>${kindLabel(ev.date)}の詳細</h3>
     ${row('対象', esc(memberName(ev.targetId)))}
     ${row('日付', fmtYMD(ev.date))}
     ${row('区分', SLOT_LABEL[ev.slot])}
     ${row('種別', c ? `<span class="swatch" style="background:${c.color}"></span> ${esc(c.name)}` : '')}
-    ${row('内容', esc(ev.title))}
+    ${row(isPlanDate(ev.date) ? '内容' : '実施内容', esc(ev.title))}
     ${row('場所', esc(ev.location))}
     ${row('関連テーマ', esc(ev.theme))}
-    ${ev.recurrenceId ? row('繰り返し', rec ? esc(`${recDesc(rec)}（${fmtYMD(rec.startDate)}〜${fmtYMD(rec.endDate)}）`) : '繰り返し予定') : ''}
+    ${ev.recurrenceId ? row('繰り返し', rec ? esc(`${recDesc(rec)}（${fmtYMD(rec.startDate)}〜${fmtYMD(rec.endDate)}）`) : '繰り返し登録（旧機能）') : ''}
     <p class="meta">最終更新：${esc(ev.updatedByName || ev.updatedBy || '')} ${fmtTs(ev.updatedAt)}</p>
     <div class="actions"><span class="hint">閲覧専用のため編集できません</span><span class="spacer"></span><button type="button" class="primary" data-close autofocus>閉じる</button></div>
   </div>`);
@@ -1099,7 +1170,7 @@ function openEventDialog(o) {
   if (isNew && !members.length) { toast('先に設定画面でメンバーを登録してください', 'error'); return; }
   const groupType = isNew ? null : ev.recurrenceId ? 'rec' : ev.batchId ? 'batch' : null;
   const rec = ev.recurrenceId ? S.recurrences.find(r => r.id === ev.recurrenceId) : null;
-  const themes = [...new Set([...S.events, ...S.weekEvents].map(e => e.theme).filter(Boolean))].sort();
+  const themes = [...new Set([...S.events, ...S.nearEvents].map(e => e.theme).filter(Boolean))].sort();
 
   const targetHtml = isNew
     ? `<div class="member-select">${members.map(m => `<label class="mem-opt" style="--mc:${m.color}"><input type="checkbox" name="targets" value="${m.id}" ${o.targets.includes(m.id) ? 'checked' : ''}><span>${esc(m.name)}</span></label>`).join('')}</div>`
@@ -1111,49 +1182,45 @@ function openEventDialog(o) {
   const slotHtml = ['am', 'pm', 'allday'].map(s => `<label class="inline"><input type="radio" name="slot" value="${s}" ${ev.slot === s ? 'checked' : ''}> ${SLOT_LABEL[s]}</label>`).join('');
   const catHtml = cats().filter(c => !c.hidden || c.id === ev.category).map(c =>
     `<label class="cat-opt" style="--c:${c.color}"><input type="radio" name="category" value="${c.id}" ${ev.category === c.id ? 'checked' : ''}><span>${esc(c.name)}</span></label>`).join('');
-  const fromWd = isNew ? parseYmd(o.from).getDay() : null;
-  const repeatHtml = isNew ? `
-    <div class="row"><label>繰り返し</label><div class="fld"><label class="inline"><input type="checkbox" name="repeat"> 毎週繰り返す</label></div></div>
-    <div id="repeatBox" hidden>
-      <div class="row"><label>曜日</label><div class="fld">${WD_ORDER.map(w => `<label class="inline"><input type="checkbox" name="wd" value="${w}" ${w === fromWd ? 'checked' : ''}> ${WD[w]}</label>`).join('')}</div></div>
-      <div class="row"><label></label><div class="fld"><label class="inline"><input type="checkbox" name="skipHolidays" checked> 祝日・会社休日はスキップ</label>
-        <p class="hint">終了日は必須です（開始日から最長1年）。終了が近づいたら設定画面の「繰り返し予定」から延長できます。</p></div></div>
-    </div>` : '';
+  // 実施内容の入力候補：対象メンバーの読み込み済みの記録から（新しい順）
+  const titleOwners = new Set(isNew ? o.targets : [ev.targetId]);
+  const titles = [...new Set([...S.events, ...S.nearEvents].filter(e => titleOwners.has(e.targetId) && e.title && e.date <= todayStr())
+    .sort((a, b) => b.date.localeCompare(a.date)).map(e => e.title))].slice(0, 30);
   let scopeHtml = '';
   if (groupType) {
-    const info = groupType === 'rec' ? `繰り返し予定：${rec ? `${recDesc(rec)}（${fmtYMD(rec.startDate)}〜${fmtYMD(rec.endDate)}）` : 'ルールは削除済み'}` : 'まとめて登録した予定です';
+    const info = groupType === 'rec' ? `繰り返し登録（旧機能）：${rec ? `${recDesc(rec)}（${fmtYMD(rec.startDate)}〜${fmtYMD(rec.endDate)}）` : 'ルールは削除済み'}` : 'まとめて登録した記録です';
     const allVal = groupType === 'rec' ? 'future' : 'group';
     scopeHtml = `<div class="row"><label>適用範囲</label><div class="fld"><p class="hint" style="margin-top:.35rem">${esc(info)}</p>
-      <label class="inline"><input type="radio" name="scope" value="one" checked> この予定のみ</label>
+      <label class="inline"><input type="radio" name="scope" value="one" checked> この1件のみ</label>
       <label class="inline"><input type="radio" name="scope" value="${allVal}"> ${groupType === 'rec' ? 'この日以降のすべて' : '同じグループのすべて'}</label></div></div>`;
   }
   const meta = isNew ? '' : `<p class="meta">作成：${esc(ev.createdByName || ev.createdBy || '')} ${fmtTs(ev.createdAt)}　／　最終更新：${esc(ev.updatedByName || ev.updatedBy || '')} ${fmtTs(ev.updatedAt)}</p>`;
 
   openDialog(`<form class="form" id="evForm" novalidate>
-    <h3>${isNew ? '予定の登録' : '予定の編集'}</h3>
+    <h3 id="evHeading"></h3>
     <p class="confidential">⚠ ${CONFIDENTIAL_NOTICE}</p>
     <div class="row"><label>対象</label><div class="fld">${targetHtml}</div></div>
     ${dateHtml}
     <div class="row"><label>区分</label><div class="fld">${slotHtml}</div></div>
     <div class="row"><label>種別</label><div class="fld cat-select">${catHtml}</div></div>
-    <div class="row"><label>内容</label><div class="fld"><input type="text" name="title" maxlength="200" value="${esc(ev.title)}" placeholder="例：顧客訪問、○○テーマ実験" autofocus></div></div>
+    <div class="row"><label id="lblTitle">実施内容</label><div class="fld"><input type="text" name="title" maxlength="200" value="${esc(ev.title)}" list="titleList" placeholder="例：顧客訪問、○○テーマ実験" autofocus><datalist id="titleList">${titles.map(t => `<option value="${esc(t)}">`).join('')}</datalist></div></div>
     <div class="row"><label>場所</label><div class="fld"><select name="location"><option value="">（未選択）</option>${LOCATIONS.map(l => `<option value="${l}" ${ev.location === l ? 'selected' : ''}>${l}</option>`).join('')}</select></div></div>
     <div class="row"><label>関連テーマ</label><div class="fld"><input type="text" name="theme" maxlength="100" value="${esc(ev.theme)}" list="themeList" placeholder="任意"><datalist id="themeList">${themes.map(t => `<option value="${esc(t)}">`).join('')}</datalist></div></div>
-    ${repeatHtml}${scopeHtml}${meta}
+    ${scopeHtml}${meta}
     <p class="error"></p>
     <div class="actions">${isNew ? '' : '<button type="button" class="danger" id="evDelete">削除</button>'}<span class="spacer"></span><button type="button" data-close>キャンセル</button><button type="submit" class="primary">保存</button></div>
   </form>`);
 
   const f = $('#evForm'), E = f.elements;
-  if (isNew) {
-    E.repeat.addEventListener('change', () => {
-      const on = E.repeat.checked;
-      $('#repeatBox').hidden = !on;
-      $('#exclWrap').hidden = on;
-      $('#lblPeriod').textContent = on ? '期間（開始〜終了）' : '期間';
-      if (on && E.to.value <= E.from.value && E.from.value) E.to.value = ymd(addDays(addMonths(parseYmd(E.from.value), 3), -1));
-    });
-  }
+  // 選んだ日付に合わせて見出しを切り替える（今日以前＝実施記録、明日以降＝予定）
+  const updHeading = () => {
+    const from = isNew ? E.from.value : E.date.value, to = isNew ? E.to.value : E.date.value;
+    const kind = !from ? 'rec' : isPlanDate(from) ? 'plan' : (to && isPlanDate(to)) ? 'mixed' : 'rec';
+    $('#evHeading').textContent = { rec: '実施記録', plan: '予定（出張・休暇など）', mixed: '実施記録・予定' }[kind] + (isNew ? 'の登録' : 'の編集');
+    $('#lblTitle').textContent = kind === 'plan' ? '内容' : '実施内容';
+  };
+  updHeading();
+  (isNew ? [E.from, E.to] : [E.date]).forEach(i => i.addEventListener('change', updHeading));
   if (groupType) {
     const upd = () => { const all = E.scope.value !== 'one'; E.date.disabled = all; E.target.disabled = all; };
     $$('[name=scope]', f).forEach(r => r.addEventListener('change', upd));
@@ -1168,11 +1235,9 @@ function readEvFields(E) {
   if (!fields.category) throw new UserError('種別を選んでください');
   return fields;
 }
-function recurrenceDates(from, to, weekdays, skipHolidays) {
-  return dateRange(from, to).filter(d => weekdays.includes(parseYmd(d).getDay()) && !(skipHolidays && holidayName(d)));
-}
 const maxEndFrom = from => ymd(addDays(addYears(parseYmd(from), 1), -1));
 
+// 繰り返し登録は廃止（日付が過ぎると、実施していない内容まで実施記録として残るため）。まとめて登録は残す
 async function saveNewEvents(f) {
   const E = f.elements;
   const targets = $$('[name=targets]:checked', f).map(i => i.value);
@@ -1184,34 +1249,20 @@ async function saveNewEvents(f) {
   const maxEnd = maxEndFrom(from);
   if (to > maxEnd) throw new UserError(`期間は最長1年です（${fmtYMD(maxEnd)} まで）`);
 
-  const ops = [];
-  let recId = null, dates, weekdays = [];
-  if (E.repeat.checked) {
-    weekdays = $$('[name=wd]:checked', f).map(i => +i.value);
-    if (!weekdays.length) throw new UserError('繰り返す曜日を選んでください');
-    const skipHolidays = E.skipHolidays.checked;
-    dates = recurrenceDates(from, to, weekdays, skipHolidays);
-    if (!dates.length) throw new UserError('条件に合う日がありません');
-    const recRef = doc(collection(db, 'recurrences'));
-    recId = recRef.id;
-    ops.push({ type: 'set', ref: recRef, data: { targetType: 'member', targetIds: targets, weekdays, skipHolidays, startDate: from, endDate: to, ...fields, ...stampNew() } });
-  } else {
-    dates = dateRange(from, to).filter(d => !(E.excludeOff.checked && isOffDay(d)));
-    if (!dates.length) throw new UserError('対象となる日がありません（「土日・祝日を除く」の設定を確認してください）');
-  }
+  const dates = dateRange(from, to).filter(d => !(E.excludeOff.checked && isOffDay(d)));
+  if (!dates.length) throw new UserError('対象となる日がありません（「土日・祝日を除く」の設定を確認してください）');
   const total = dates.length * targets.length;
-  if (total > BULK_CONFIRM && !confirm(`${total}件の予定を登録します。よろしいですか？`)) return false;
-  const batchId = !recId && total > 1 ? doc(collection(db, 'events')).id : null;
-  const ids = [];
+  if (total > BULK_CONFIRM && !confirm(`${total}件を登録します。よろしいですか？`)) return false;
+  const batchId = total > 1 ? doc(collection(db, 'events')).id : null;
+  const ops = [], ids = [];
   for (const t of targets) for (const d of dates) {
     const ref = doc(collection(db, 'events'));
     ids.push(ref.id);
-    ops.push({ type: 'set', ref, data: { date: d, targetType: 'member', targetId: t, ...fields, batchId, recurrenceId: recId, ...stampNew() } });
+    ops.push({ type: 'set', ref, data: { date: d, targetType: 'member', targetId: t, ...fields, batchId, recurrenceId: null, ...stampNew() } });
   }
-  const summary = `予定を登録：${targets.map(memberName).join('・')} ${fmtRange(dates)} ${SLOT_LABEL[fields.slot]} [${catName(fields.category)}] ${fields.title}`
-    + (recId ? `（毎週${WD_ORDER.filter(w => weekdays.includes(w)).map(w => WD[w]).join('・')}）` : '') + `　${total}件`;
-  await commitOps(ops, { action: 'create', entity: recId ? 'recurrence' : 'event', summary, docIds: ids, after: { ...fields, targets: targets.map(memberName), from, to } });
-  toast(`${total}件の予定を登録しました`);
+  const summary = `${kindLabel(from, to)}を登録：${targets.map(memberName).join('・')} ${fmtRange(dates)} ${SLOT_LABEL[fields.slot]} [${catName(fields.category)}] ${fields.title}　${total}件`;
+  await commitOps(ops, { action: 'create', entity: 'event', summary, docIds: ids, after: { ...fields, targets: targets.map(memberName), from, to } });
+  toast(`${total}件を登録しました`);
   return true;
 }
 
@@ -1230,104 +1281,60 @@ async function saveEditEvent(f, ev, groupType, rec) {
     if (!E.date.value) throw new UserError('日付を入力してください');
     const after = { ...fields, date: E.date.value, targetId: E.target.value };
     await commitOps([{ type: 'update', ref: doc(db, 'events', ev.id), data: { ...after, ...stampUpd() } }],
-      { action: 'update', entity: 'event', summary: '予定を変更：' + describeEv({ ...ev, ...after }), docIds: [ev.id], before: pickEv(ev), after: pickEv({ ...ev, ...after }) });
-    toast('予定を更新しました');
+      { action: 'update', entity: 'event', summary: `${kindLabel(after.date)}を変更：` + describeEv({ ...ev, ...after }), docIds: [ev.id], before: pickEv(ev), after: pickEv({ ...ev, ...after }) });
+    toast('更新しました');
     return true;
   }
   const list = await groupEvents(ev, scope);
   const ops = list.map(x => ({ type: 'update', ref: doc(db, 'events', x.id), data: { ...fields, ...stampUpd() } }));
   if (scope === 'future' && rec) ops.push({ type: 'update', ref: doc(db, 'recurrences', rec.id), data: { ...fields, ...stampUpd() } });
   const before = { slot: ev.slot, category: ev.category, title: ev.title, location: ev.location, theme: ev.theme };
-  await commitOps(ops, { action: 'update', entity: 'event', summary: `予定を一括変更（${scope === 'future' ? 'この日以降の繰り返し' : 'グループ'} ${list.length}件）：${describeEv({ ...ev, ...fields })}`, docIds: list.map(x => x.id), before, after: fields });
-  toast(`${list.length}件の予定を更新しました`);
+  await commitOps(ops, { action: 'update', entity: 'event', summary: `記録を一括変更（${scope === 'future' ? 'この日以降の繰り返し' : 'グループ'} ${list.length}件）：${describeEv({ ...ev, ...fields })}`, docIds: list.map(x => x.id), before, after: fields });
+  toast(`${list.length}件を更新しました`);
   return true;
 }
 
 async function deleteEvent(f, ev, groupType, rec) {
   const scope = groupType ? f.elements.scope.value : 'one';
   if (scope === 'one') {
-    if (!confirm('この予定を削除しますか？')) return false;
-    await commitOps([{ type: 'delete', ref: doc(db, 'events', ev.id) }], { action: 'delete', entity: 'event', summary: '予定を削除：' + describeEv(ev), docIds: [ev.id], before: pickEv(ev) });
-    toast('予定を削除しました');
+    if (!confirm(`この${kindLabel(ev.date)}を削除しますか？`)) return false;
+    await commitOps([{ type: 'delete', ref: doc(db, 'events', ev.id) }], { action: 'delete', entity: 'event', summary: `${kindLabel(ev.date)}を削除：` + describeEv(ev), docIds: [ev.id], before: pickEv(ev) });
+    toast('削除しました');
     return true;
   }
   const list = await groupEvents(ev, scope);
-  if (!confirm(`${list.length}件の予定を削除しますか？`)) return false;
+  if (!confirm(`${list.length}件を削除しますか？`)) return false;
   const ops = list.map(x => ({ type: 'delete', ref: doc(db, 'events', x.id) }));
   if (scope === 'future' && rec) {
     if (ev.date <= rec.startDate) ops.push({ type: 'delete', ref: doc(db, 'recurrences', rec.id) });
     else ops.push({ type: 'update', ref: doc(db, 'recurrences', rec.id), data: { endDate: ymd(addDays(parseYmd(ev.date), -1)), ...stampUpd() } });
   }
-  await commitOps(ops, { action: 'delete', entity: 'event', summary: `予定を一括削除（${list.length}件）：${describeEv(ev)}`, docIds: list.map(x => x.id), before: pickEv(ev) });
-  toast(`${list.length}件の予定を削除しました`);
+  await commitOps(ops, { action: 'delete', entity: 'event', summary: `記録を一括削除（${list.length}件）：${describeEv(ev)}`, docIds: list.map(x => x.id), before: pickEv(ev) });
+  toast(`${list.length}件を削除しました`);
   return true;
 }
 
 // =====================================================================
-//  繰り返し予定の延長・終了
+//  繰り返し登録（旧機能）の終了。新規作成・延長は廃止
 // =====================================================================
-function expiringRecurrences() {
-  const today = todayStr(), lim = ymd(addDays(new Date(), EXPIRY_WARN_DAYS));
-  return S.recurrences.filter(r => r.endDate >= today && r.endDate <= lim).sort((a, b) => a.endDate.localeCompare(b.endDate));
-}
-const recMaxEnd = () => maxEndFrom(todayStr()); // 延長は「今日から最長1年」まで
-
-function openExtendDialog(r) {
-  if (!r) return;
-  const maxEnd = recMaxEnd();
-  const base = r.endDate < todayStr() ? todayStr() : r.endDate;
-  const cand = n => { const v = ymd(addMonths(parseYmd(base), n)); return v > maxEnd ? maxEnd : v; };
-  openDialog(`<form class="form" id="extForm" novalidate>
-    <h3>繰り返し予定の延長</h3>
-    <p><b>${esc(r.targetIds.map(memberName).join('・'))}</b>　${esc(recDesc(r))}　[${esc(catName(r.category))}] ${esc(r.title || '')}</p>
-    <div class="row"><label>現在の終了日</label><div class="fld" style="padding-top:.35rem">${fmtYMD(r.endDate)}</div></div>
-    <div class="row"><label>新しい終了日</label><div class="fld"><input type="date" name="end" value="${cand(3)}" min="${ymd(addDays(parseYmd(r.endDate), 1))}" max="${maxEnd}" required>
-      <div style="margin-top:.4rem">${[1, 3, 6, 12].map(n => `<button type="button" class="small" data-ext="${cand(n)}">${n === 12 ? '1年' : n + 'か月'}</button>`).join(' ')}</div>
-      <p class="hint">延長できるのは今日から最長1年（${fmtYMD(maxEnd)}）までです。非表示のメンバーの分は作成されません。</p></div></div>
-    <p class="error"></p>
-    <div class="actions"><span class="spacer"></span><button type="button" data-close>キャンセル</button><button type="submit" class="primary">延長する</button></div>
-  </form>`);
-  const f = $('#extForm');
-  $$('[data-ext]', f).forEach(b => b.addEventListener('click', () => { f.elements.end.value = b.dataset.ext; }));
-  f.addEventListener('submit', e => { e.preventDefault(); guarded(f, () => extendRecurrence(r, f.elements.end.value)); });
-}
-
-async function extendRecurrence(r, newEnd) {
-  const maxEnd = recMaxEnd();
-  if (!newEnd) throw new UserError('新しい終了日を入力してください');
-  if (newEnd <= r.endDate) throw new UserError('現在の終了日より後の日付を指定してください');
-  if (newEnd > maxEnd) throw new UserError(`延長できるのは ${fmtYMD(maxEnd)} までです`);
-  const targets = r.targetIds.filter(id => memberById(id) && memberById(id).active !== false);
-  if (!targets.length) throw new UserError('対象のメンバーが全員非表示のため延長できません');
-  const nextDay = ymd(addDays(parseYmd(r.endDate), 1));
-  const genFrom = nextDay > todayStr() ? nextDay : todayStr();
-  const dates = recurrenceDates(genFrom, newEnd, r.weekdays, r.skipHolidays);
-  const ops = [{ type: 'update', ref: doc(db, 'recurrences', r.id), data: { endDate: newEnd, ...stampUpd() } }];
-  const fields = { slot: r.slot, category: r.category, title: r.title || '', location: r.location || '', theme: r.theme || '' };
-  for (const t of targets) for (const d of dates) ops.push({ type: 'set', ref: doc(collection(db, 'events')), data: { date: d, targetType: 'member', targetId: t, ...fields, batchId: null, recurrenceId: r.id, ...stampNew() } });
-  await commitOps(ops, { action: 'update', entity: 'recurrence', summary: `繰り返し予定を延長：${targets.map(memberName).join('・')} ${recDesc(r)} [${catName(r.category)}] ${r.title || ''}（${fmtYMD(r.endDate)} → ${fmtYMD(newEnd)}、${dates.length * targets.length}件追加）`, docIds: [r.id], before: { endDate: r.endDate }, after: { endDate: newEnd } });
-  toast('繰り返し予定を延長しました');
-  return true;
-}
-
 async function stopRecurrence(r) {
   if (!r) return;
   const today = todayStr();
-  if (!confirm(`この繰り返し予定を終了し、今日（${fmtMD(today)}）以降の予定を削除しますか？\n過去の予定は残ります。`)) return;
+  if (!confirm(`この繰り返し登録を終了し、今日（${fmtMD(today)}）以降に作られている分を削除しますか？\n今日より前の記録は残ります。`)) return;
   const list = docsOf(await getDocs(query(collection(db, 'events'), where('recurrenceId', '==', r.id)))).filter(x => x.date >= today);
   const ops = list.map(x => ({ type: 'delete', ref: doc(db, 'events', x.id) }));
   if (r.startDate >= today) ops.push({ type: 'delete', ref: doc(db, 'recurrences', r.id) });
   else ops.push({ type: 'update', ref: doc(db, 'recurrences', r.id), data: { endDate: ymd(addDays(parseYmd(today), -1)), ...stampUpd() } });
-  await commitOps(ops, { action: 'delete', entity: 'recurrence', summary: `繰り返し予定を終了：${r.targetIds.map(memberName).join('・')} ${recDesc(r)} [${catName(r.category)}] ${r.title || ''}（${list.length}件削除）`, docIds: [r.id], before: { endDate: r.endDate } });
-  toast('繰り返し予定を終了しました');
+  await commitOps(ops, { action: 'delete', entity: 'recurrence', summary: `繰り返し登録を終了：${r.targetIds.map(memberName).join('・')} ${recDesc(r)} [${catName(r.category)}] ${r.title || ''}（${list.length}件削除）`, docIds: [r.id], before: { endDate: r.endDate } });
+  toast('繰り返し登録を終了しました');
 }
 
 // =====================================================================
 //  設定画面
 // =====================================================================
 function renderSettings() {
-  $('#toolbar').innerHTML = `<div class="nav"><h2 style="text-align:left;margin-left:0">設定</h2></div><div class="tb-right"><button data-view="month">← カレンダーに戻る</button></div>`;
-  const tabs = [['rec', '繰り返し予定']];
+  $('#toolbar').innerHTML = `<div class="nav"><h2 style="text-align:left;margin-left:0">設定</h2></div><div class="tb-right"><button data-view="week">← 一覧に戻る</button></div>`;
+  const tabs = [['rec', '繰り返し登録（旧）']];
   if (isAdmin()) tabs.push(['history', '編集履歴'], ['members', 'メンバー'], ['viewers', '閲覧者'], ['time', '時間帯'], ['cats', '種別'], ['holidays', '会社休日']);
   if (!tabs.some(t => t[0] === S.settingsTab)) S.settingsTab = 'rec';
   const body = { rec: settingsRec, history: settingsHistory, members: settingsMembers, viewers: settingsViewers, time: settingsTime, cats: settingsCats, holidays: settingsHolidays }[S.settingsTab]();
@@ -1352,24 +1359,23 @@ function afterSettingsRender() {
   if (S.settingsTab === 'holidays') { const f = $('#holForm'); f.addEventListener('submit', e => { e.preventDefault(); guarded(f, () => addCompanyHoliday(f)); }); }
 }
 
-// ---------- 繰り返し予定 ----------
+// ---------- 繰り返し登録（旧機能） ----------
 function settingsRec() {
   const today = todayStr();
-  const exp = expiringRecurrences();
   const row = r => {
-    const ended = r.endDate < today, soon = exp.includes(r);
-    const status = ended ? '<span class="badge gray">終了</span>' : soon ? '<span class="badge warn">終了間近</span>' : '<span class="badge ok">有効</span>';
+    const ended = r.endDate < today;
     const c = catById(r.category);
-    return `<tr class="${soon ? 'warn' : ''}"><td>${status}</td><td>${esc(r.targetIds.map(memberName).join('・'))}</td><td>${esc(recDesc(r))}</td>
+    return `<tr><td>${ended ? '<span class="badge gray">終了</span>' : '<span class="badge ok">継続中</span>'}</td><td>${esc(r.targetIds.map(memberName).join('・'))}</td><td>${esc(recDesc(r))}</td>
       <td><span class="swatch" style="background:${c?.color || '#888'}"></span> ${esc(c?.name || '')} ${esc(r.title || '')}</td>
       <td>${fmtYMD(r.startDate)}〜${fmtYMD(r.endDate)}</td>
-      <td class="act"><button class="small" data-act="rec-extend" data-id="${r.id}">延長</button> ${ended ? '' : `<button class="small danger" data-act="rec-stop" data-id="${r.id}">終了</button>`}</td></tr>`;
+      <td class="act">${ended ? '' : `<button class="small danger" data-act="rec-stop" data-id="${r.id}">終了</button>`}</td></tr>`;
   };
-  const table = list => `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>状態</th><th>対象</th><th>繰り返し</th><th>種別・内容</th><th>期間</th><th></th></tr></thead><tbody>${list.map(row).join('')}</tbody></table></div>`;
   const all = [...S.recurrences].sort((a, b) => (a.endDate < today) - (b.endDate < today) || a.endDate.localeCompare(b.endDate));
-  return `<h3>終了日が${EXPIRY_WARN_DAYS}日以内の繰り返し予定</h3>${exp.length ? table(exp) : '<p class="muted">該当する繰り返し予定はありません。</p>'}
-    <h3>すべての繰り返し予定</h3><p class="hint">新しい繰り返し予定は、カレンダーのセルをクリックし「毎週繰り返す」にチェックして登録します。</p>
-    ${all.length ? table(all) : '<p class="muted">登録されている繰り返し予定はありません。</p>'}`;
+  return `<h3>繰り返し登録（旧機能）</h3>
+    <p class="hint">実施記録の用途に合わせて、繰り返し登録は廃止しました（日付が過ぎると、実施していない内容まで記録として残るため）。<br>
+    以前に登録した繰り返しが残っている場合は「終了」を押すと、今日以降に作られている分を削除して終了します。今日より前の記録は残ります。</p>
+    ${all.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>状態</th><th>対象</th><th>繰り返し</th><th>種別・内容</th><th>期間</th><th></th></tr></thead><tbody>${all.map(row).join('')}</tbody></table></div>`
+      : '<p class="muted">繰り返し登録はありません。</p>'}`;
 }
 
 // ---------- 編集履歴 ----------
@@ -1384,7 +1390,7 @@ function settingsHistory() {
   const who = [...new Map(S.history.map(h => [h.byEmail, h.byName])).entries()];
   return `<div class="tab-head"><select id="histWho"><option value="">すべての変更者</option>${who.map(([e, n]) => `<option value="${esc(e)}">${esc(n || e)}</option>`).join('')}</select>
     <input type="text" id="histSearch" placeholder="内容で検索" style="max-width:260px"><button data-act="hist-reload">再読み込み</button></div>
-    <p class="hint">直近300件を表示しています。${isAdmin() ? '誤って社外秘情報が記録された場合は、その行の「削除」で消去できます（予定そのものも忘れずに修正してください）。' : ''}</p><div id="histList">${S.historyLoaded ? '' : '<p class="muted">読み込み中…</p>'}</div>`;
+    <p class="hint">直近300件を表示しています。${isAdmin() ? '誤って社外秘情報が記録された場合は、その行の「削除」で消去できます（記録そのものも忘れずに修正してください）。' : ''}</p><div id="histList">${S.historyLoaded ? '' : '<p class="muted">読み込み中…</p>'}</div>`;
 }
 const ACTION_LABEL = { create: '追加', update: '変更', delete: '削除', purge: '履歴削除' };
 const FIELD_LABEL = { date: '日付', targetId: '対象', slot: '区分', category: '種別', title: '内容', location: '場所', theme: '関連テーマ', name: '表示名', email: 'メール', color: '色', isAdmin: '管理者', role: '役割', active: '表示', endDate: '終了日', slots: '時間帯', categories: '種別', companyHolidays: '会社休日', order: '表示順' };
@@ -1429,7 +1435,7 @@ function settingsMembers() {
   const list = S.members.filter(m => S.showInactiveSettings || m.active !== false).sort(byOrder);
   return `<div class="tab-head"><button class="primary" data-act="member-add">＋ メンバーを追加</button>
     <label class="inline"><input type="checkbox" data-act="toggle-inactive-settings" ${S.showInactiveSettings ? 'checked' : ''}> 非表示のメンバーも表示</label></div>
-    <p class="hint">左端の ≡ をドラッグすると表示順を変更できます。異動・退職したメンバーは「非表示」にしてください（過去の予定は残り、ログインはできなくなります）。管理者は最低1人必要です。</p>
+    <p class="hint">左端の ≡ をドラッグすると表示順を変更できます。異動・退職したメンバーは「非表示」にしてください（過去の記録は残り、ログインはできなくなります）。管理者は最低1人必要です。</p>
     <ul class="member-list" id="memberList">${list.map(m => `<li data-id="${m.id}" class="${m.active === false ? 'inactive' : ''}">
       <span class="drag-handle" title="ドラッグで並べ替え">≡</span><span class="swatch" style="background:${m.color}"></span>
       <span class="m-name">${esc(m.name)}</span>${memberIsAdmin(m) ? '<span class="badge">管理者</span>' : ''}${m.active === false ? '<span class="badge gray">非表示</span>' : ''}
@@ -1487,7 +1493,7 @@ async function saveMember(id, input) {
 
 async function toggleMemberActive(m) {
   const toActive = m.active === false;
-  if (!toActive && !confirm(`${m.name} さんを非表示にしますか？\n過去の予定は残りますが、カレンダーに表示されなくなり、ログインもできなくなります。`)) return;
+  if (!toActive && !confirm(`${m.name} さんを非表示にしますか？\n過去の記録は残りますが、一覧に表示されなくなり、ログインもできなくなります。`)) return;
   await saveMember(m.id, { ...m, email: m.email || '', isAdmin: memberIsAdmin(m), active: toActive });
 }
 
@@ -1518,7 +1524,7 @@ function openMemberDialog(m) {
 function settingsViewers() {
   const list = [...S.viewers].sort((a, b) => a.name.localeCompare(b.name, 'ja'));
   return `<div class="tab-head"><button class="primary" data-act="viewer-add">＋ 閲覧者を追加</button></div>
-    <p class="hint">閲覧者は予定表の閲覧・絞り込み・印刷・CSV出力のみできます（予定の登録・編集、設定、編集履歴は利用できません）。予定表の列には表示されません。<br>削除するとログインできなくなります。登録後、本人に「初回登録」をしてもらってください。</p>
+    <p class="hint">閲覧者は記録の閲覧・絞り込み・印刷・CSV出力のみできます（記録の登録・編集、設定、編集履歴は利用できません）。一覧の列には表示されません。<br>削除するとログインできなくなります。登録後、本人に「初回登録」をしてもらってください。</p>
     ${list.length ? `<div class="tbl-wrap"><table class="tbl" style="max-width:760px"><thead><tr><th>表示名</th><th>メールアドレス</th><th></th></tr></thead><tbody>${list.map(v =>
       `<tr><td>${esc(v.name)}<span class="badge view-only">閲覧者</span></td><td>${esc(v.email)}</td><td class="act"><button class="small" data-act="viewer-edit" data-id="${v.id}">編集</button> <button class="small danger" data-act="viewer-del" data-id="${v.id}">削除</button></td></tr>`).join('')}</tbody></table></div>`
       : '<p class="muted">登録されている閲覧者はいません。</p>'}`;
@@ -1584,7 +1590,7 @@ async function runMigration() {
 function settingsTime() {
   const sl = S.config.slots;
   const pair = (k, label) => `<span>${label}</span><span><input type="time" name="${k}_start" value="${sl[k].start}" step="300" required> 〜 <input type="time" name="${k}_end" value="${sl[k].end}" step="300" required></span>`;
-  return `<form id="timeForm" novalidate><h3>時間帯</h3><p class="hint">予定は「午前」「午後」の区分で管理します。ここで設定した時刻は画面上の表示に使われます。</p>
+  return `<form id="timeForm" novalidate><h3>時間帯</h3><p class="hint">記録は「午前」「午後」の区分で管理します。ここで設定した時刻は画面上の表示に使われます。</p>
     <div class="time-grid">${pair('am', '午前')}${pair('lunch', '昼休み')}${pair('pm', '午後')}</div>
     <p class="error"></p><button type="submit" class="primary">保存</button></form>`;
 }
@@ -1606,7 +1612,7 @@ const catRow = c => `<tr data-cat="${c.id}"><td><span class="drag-handle">≡</s
   <td style="text-align:center"><input type="checkbox" name="abs" ${c.isAbsence ? 'checked' : ''}></td>
   <td style="text-align:center"><input type="checkbox" name="hidden" ${c.hidden ? 'checked' : ''}></td></tr>`;
 function settingsCats() {
-  return `<form id="catForm" novalidate><h3>種別</h3><p class="hint">「不在扱い」にした種別は、トップの「今日の不在者」に表示されます。「使わない」にすると入力画面の選択肢から外れます（過去の予定はそのまま表示されます）。≡ をドラッグで並べ替えできます。</p>
+  return `<form id="catForm" novalidate><h3>種別</h3><p class="hint">「不在扱い」にした種別は、トップの「今日の不在者」に表示されます。「使わない」にすると入力画面の選択肢から外れます（過去の記録はそのまま表示されます）。≡ をドラッグで並べ替えできます。</p>
     <div class="tbl-wrap"><table class="tbl" style="max-width:640px"><thead><tr><th style="width:2rem"></th><th style="width:4rem">色</th><th>種別名</th><th style="width:6rem;text-align:center">不在扱い</th><th style="width:6rem;text-align:center">使わない</th></tr></thead>
     <tbody id="catBody">${cats().map(catRow).join('')}</tbody></table></div>
     <p><button type="button" data-act="cat-add">＋ 種別を追加</button></p><p class="error"></p><button type="submit" class="primary">保存</button></form>`;
@@ -1665,16 +1671,16 @@ function exportCsv() {
     if (/^[=+\-@]/.test(s)) s = "'" + s; // 数式として解釈されないように
     return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
-  const rows = [['日付', '曜日', '区分', 'メンバー', '種別', '内容', '場所', '関連テーマ', '繰り返し', '更新者', '更新日時']];
+  const rows = [['日付', '曜日', '区分', 'メンバー', '種別', '実施内容', '場所', '関連テーマ', '記録／予定', '更新者', '更新日時']];
   for (const e of list) {
     const d = parseYmd(e.date);
     rows.push([`${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())}`, WD[d.getDay()], SLOT_LABEL[e.slot], memberName(e.targetId), catName(e.category),
-      e.title, e.location, e.theme, e.recurrenceId ? '○' : '', e.updatedByName || e.updatedBy || '', fmtTs(e.updatedAt)]);
+      e.title, e.location, e.theme, isPlanDate(e.date) ? '予定' : '記録', e.updatedByName || e.updatedBy || '', fmtTs(e.updatedAt)]);
   }
   const csv = '﻿' + rows.map(r => r.map(cell).join(',')).join('\r\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-  a.download = S.view === 'week' ? `予定_${start}週.csv` : `予定_${start.slice(0, 7)}.csv`;
+  a.download = S.view === 'day' ? `業務記録_${start}.csv` : S.view === 'week' ? `業務記録_${start}週.csv` : `業務記録_${start.slice(0, 7)}.csv`;
   document.body.appendChild(a);
   a.click();
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
