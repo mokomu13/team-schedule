@@ -1551,7 +1551,7 @@ async function saveMember(id, input) {
   if (!name) throw new UserError('表示名を入力してください');
   if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new UserError('メールアドレスの形式が正しくありません');
   if (email && S.members.some(m => m.id !== id && m.email === email)) throw new UserError('このメールアドレスは別のメンバーに登録されています');
-  if (email && data.active && S.viewers.some(v => v.email === email)) throw new UserError('このメールアドレスは閲覧者として登録されています。先に閲覧者から削除してください');
+  if (email && input.active && S.viewers.some(v => v.email === email)) throw new UserError('このメールアドレスは閲覧者として登録されています。先に閲覧者から削除してください');
   const data = { name, email, color: input.color, role: input.isAdmin ? 'admin' : 'member', active: !!input.active };
 
   // 管理者が0人になる変更（最後の管理者の権限解除・非表示・メール削除）は不可
