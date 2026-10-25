@@ -95,7 +95,12 @@ table.grid{border-collapse:separate;border-spacing:0;width:100%;table-layout:fix
 .grid td.cell{cursor:cell;background:var(--surface)}
 .grid td.cell:hover{box-shadow:inset 0 0 0 2px rgba(44,90,133,.28)}
 .grid td.cell.sel{background:var(--sel)!important}
-body.readonly .grid td.cell{cursor:default}
+body.readonly .grid td.cell,.grid td.cell.ro{cursor:default}
+.grid td.cell.ro:hover{box-shadow:none}
+/* 自分の行（月表示は列の見出し）を薄く強調する */
+.week tr.mine > th.c-name,.day tr.mine > th.c-name,.month th.c-member.mine{background:color-mix(in srgb,var(--mc) 16%,var(--surface2))}
+.week tr.mine > td.cell:not(.sat):not(.sun):not(.today),.day tr.mine > td.cell{background:color-mix(in srgb,var(--primary) 5%,var(--surface))}
+.me-tag{display:inline-block;margin-left:.35em;font-size:.68rem;font-weight:700;color:#fff;background:var(--mc,var(--primary));border-radius:3px;padding:0 .3em;vertical-align:1px}
 body.readonly .grid td.cell:hover{box-shadow:none}
 .badge.view-only{background:#e8eaed;color:#3d4753;font-weight:700}
 .hol{display:block;font-size:.72rem;color:var(--sun-text);font-weight:400;line-height:1.2}
@@ -474,6 +479,11 @@ const roleOf = a => !a ? null : (a.role || (a.isAdmin === true ? 'admin' : 'memb
 const myRole = () => roleOf(S.allowed);
 const isAdmin = () => myRole() === 'admin';
 const canEdit = () => myRole() === 'admin' || myRole() === 'member';
+// 自分のメンバーID（allowedUsers.memberId）。firestore.rules の myMemberId() と同じ
+const myMemberId = () => S.allowed?.memberId || '';
+// 管理者は全員分、メンバーは自分の記録だけ書き込める（firestore.rules の canWriteTarget / canWriteTargets と同じ判定）
+const canEditTarget = targetId => isAdmin() || (canEdit() && !!myMemberId() && targetId === myMemberId());
+const canEditTargets = ids => isAdmin() || (canEdit() && !!myMemberId() && ids.length === 1 && ids[0] === myMemberId());
 const isViewer = () => myRole() === 'viewer';
 const memberIsAdmin = m => roleOf(m) === 'admin';
 const me =() => memberById(S.allowed?.memberId) || S.members.find(m => m.email === S.email);
@@ -772,9 +782,9 @@ function weekCellHtml(idx, t, d, s, cls) {
   const over = evs.length > max ? evs.length - max : 0;
   const chips = evs.map((e, i) => chipHtml(e, { compact: true, extra: i >= max })).join('');
   const more = over ? `<button type="button" class="more" data-act="cell-more" data-date="${d}" data-slot="${s}" data-target="${t}" title="このマスの全${evs.length}件を表示">＋${over}件</button>` : '';
-  return `<td class="cell ${cls}" data-date="${d}" data-slot="${s}" data-target="${t}">${chips}${more}</td>`;
+  return `<td class="cell ${cls}${canEditTarget(t) ? '' : ' ro'}" data-date="${d}" data-slot="${s}" data-target="${t}">${chips}${more}</td>`;
 }
-const cellHtml = (idx, t, d, s, cls = '') => `<td class="cell ${cls}" data-date="${d}" data-slot="${s}" data-target="${t}">${cellEvents(idx, t, d, s).map(e => chipHtml(e)).join('')}</td>`;
+const cellHtml = (idx, t, d, s, cls = '') => `<td class="cell ${cls}${canEditTarget(t) ? '' : ' ro'}" data-date="${d}" data-slot="${s}" data-target="${t}">${cellEvents(idx, t, d, s).map(e => chipHtml(e)).join('')}</td>`;
 const emptyHtml = () => '<div class="card"><p class="muted">表示するメンバーがいません。絞り込み条件を確認するか、設定画面からメンバーを追加してください。</p></div>';
 
 // ---------- サマリー（今日の不在者・記録状況・今後の不在予定） ----------
@@ -863,7 +873,7 @@ function renderMonth() {
   if (!cols.length) { setViewHtml(emptyHtml(), 'empty'); return; }
   const idx = indexEvents(S.events);
   const today = todayStr();
-  let h = `<div class="grid-wrap"><table class="grid month" style="--cols:${cols.length}"><thead><tr><th class="c-date">日付</th><th class="c-slot">区分</th>${cols.map(m => `<th class="c-member" style="--mc:${m.color}">${esc(m.name)}${m.active === false ? '<small class="muted">（非表示）</small>' : ''}</th>`).join('')}</tr></thead><tbody>`;
+  let h = `<div class="grid-wrap"><table class="grid month" style="--cols:${cols.length}"><thead><tr><th class="c-date">日付</th><th class="c-slot">区分</th>${cols.map(m => `<th class="c-member${m.id === myMemberId() ? ' mine' : ''}" style="--mc:${m.color}">${esc(m.name)}${m.id === myMemberId() ? '<small class="me-tag">自分</small>' : ''}${m.active === false ? '<small class="muted">（非表示）</small>' : ''}</th>`).join('')}</tr></thead><tbody>`;
   for (const d of dateRange(start, end)) {
     const hol = holidayName(d);
     const cls = `${dayKind(d)}${d === today ? ' today' : ''}`;
@@ -896,7 +906,7 @@ function renderWeek() {
     + days.map(d => { const hol = holidayName(d); return `<th colspan="2" class="${dayKind(d)}${d === today ? ' today' : ''}">${fmtMD(d)}${hol ? `<small class="hol">${esc(hol)}</small>` : ''}</th>`; }).join('')
     + `</tr><tr class="sub">${days.map(d => `<th class="${dayKind(d)}">午前</th><th class="${dayKind(d)}">午後</th>`).join('')}</tr></thead><tbody>`;
   for (const m of cols) {
-    h += `<tr><th class="c-name" style="--mc:${m.color}">${esc(m.name)}</th>${days.map(d => {
+    h += `<tr${m.id === myMemberId() ? ' class="mine"' : ''}><th class="c-name" style="--mc:${m.color}">${esc(m.name)}${m.id === myMemberId() ? '<small class="me-tag">自分</small>' : ''}</th>${days.map(d => {
       const k = dayKind(d) + (d === today ? ' today' : '');
       return weekCellHtml(idx, m.id, d, 'am', 'am ' + k + unrec(m.id, d, 'am')) + weekCellHtml(idx, m.id, d, 'pm', 'pm ' + k + unrec(m.id, d, 'pm'));
     }).join('')}</tr>`;
@@ -921,11 +931,11 @@ function renderDay() {
   if (!cols.length) { setViewHtml(emptyHtml(), 'empty'); return; }
   const idx = indexEvents(S.events);
   const raw = rawSlotSet(S.events);
-  const cell = (m, s, inner, extra = '') => `<td class="cell ${s}"${extra} data-label="${SLOT_LABEL[s]}" data-date="${d}" data-slot="${s === 'allday' ? 'am' : s}" data-target="${m.id}"><div class="cell-body">${inner}</div></td>`;
+  const cell = (m, s, inner, extra = '') => `<td class="cell ${s}${canEditTarget(m.id) ? '' : ' ro'}"${extra} data-label="${SLOT_LABEL[s]}" data-date="${d}" data-slot="${s === 'allday' ? 'am' : s}" data-target="${m.id}"><div class="cell-body">${inner}</div></td>`;
   let h = `<div class="grid-wrap day-wrap"><table class="grid day ${dayKind(d)}"><thead><tr><th class="c-name">メンバー</th><th>午前</th><th>午後</th></tr></thead><tbody>`;
   for (const m of cols) {
     const evs = idx.get(m.id + '|' + d) || [];
-    h += `<tr><th class="c-name" style="--mc:${m.color}">${esc(m.name)}</th>`;
+    h += `<tr${m.id === myMemberId() ? ' class="mine"' : ''}><th class="c-name" style="--mc:${m.color}">${esc(m.name)}${m.id === myMemberId() ? '<small class="me-tag">自分</small>' : ''}</th>`;
     if (evs.length && evs.every(e => e.slot === 'allday')) {
       h += cell(m, 'allday', evs.map(e => chipHtml(e)).join(''), ' colspan="2"');
     } else {
@@ -1023,7 +1033,7 @@ function bindGlobalEvents() {
     if (!canEdit()) return; // 閲覧者はドラッグ選択・新規登録不可
     if (e.pointerType !== 'mouse' || e.button !== 0 || e.target.closest('.chip, .more')) return;
     const td = e.target.closest('td.cell');
-    if (!td) return;
+    if (!td || !canEditTarget(td.dataset.target)) return; // メンバーは自分の行（列）からだけ選択できる
     e.preventDefault();
     sel = { a: cellInfo(td), b: cellInfo(td) };
     paintSel();
@@ -1033,6 +1043,7 @@ function bindGlobalEvents() {
     const td = e.target.closest('td.cell');
     if (!td) return;
     const c = cellInfo(td);
+    if (!isAdmin()) c.target = sel.a.target; // 複数メンバーをまたぐ選択は管理者のみ。メンバーは日付の範囲だけ広がる
     if (c.date === sel.b.date && c.slot === sel.b.slot && c.target === sel.b.target) return;
     sel.b = c;
     paintSel();
@@ -1043,6 +1054,7 @@ function bindGlobalEvents() {
     const td = e.target.closest('td.cell');
     if (!td) return;
     const c = cellInfo(td);
+    if (!canEditTarget(c.target)) return;
     openEventDialog({ mode: 'new', targets: [c.target], from: c.date, to: c.date, slot: c.slot });
   });
 
@@ -1227,7 +1239,7 @@ const recDesc = r => `毎週${WD_ORDER.filter(w => r.weekdays.includes(w)).map(w
 function openEditById(id) {
   const ev = S.events.find(e => e.id === id) || S.nearEvents.find(e => e.id === id);
   if (!ev) return;
-  if (canEdit()) openEventDialog({ mode: 'edit', event: ev });
+  if (canEditTarget(ev.targetId)) openEventDialog({ mode: 'edit', event: ev });
   else openDetailDialog(ev);
 }
 
@@ -1247,15 +1259,18 @@ function openDetailDialog(ev) {
     ${row('関連テーマ', esc(ev.theme))}
     ${ev.recurrenceId ? row('繰り返し', rec ? esc(`${recDesc(rec)}（${fmtYMD(rec.startDate)}〜${fmtYMD(rec.endDate)}）`) : '繰り返し登録（旧機能）') : ''}
     <p class="meta">最終更新：${esc(ev.updatedByName || ev.updatedBy || '')} ${fmtTs(ev.updatedAt)}</p>
-    <div class="actions"><span class="hint">閲覧専用のため編集できません</span><span class="spacer"></span><button type="button" class="primary" data-close autofocus>閉じる</button></div>
+    <div class="actions"><span class="hint">${isViewer() ? '閲覧専用のため編集できません' : '他のメンバーの記録は編集できません（修正は管理者に依頼してください）'}</span><span class="spacer"></span><button type="button" class="primary" data-close autofocus>閉じる</button></div>
   </div>`);
 }
 
 function openEventDialog(o) {
   if (!canEdit()) return;
   const isNew = o.mode === 'new';
+  if (!isNew && !canEditTarget(o.event.targetId)) { openDetailDialog(o.event); return; }
+  if (isNew) { o.targets = o.targets.filter(canEditTarget); if (!o.targets.length) return; }
   const ev = isNew ? { slot: o.slot || 'am', category: '', title: '', location: '', theme: '' } : o.event;
-  const members = S.members.filter(m => m.active !== false || (!isNew && m.id === ev.targetId)).sort(byOrder);
+  // 対象に選べるのは、管理者なら全員、メンバーなら自分だけ（付け替えも不可）
+  const members = S.members.filter(m => (m.active !== false || (!isNew && m.id === ev.targetId)) && canEditTarget(m.id)).sort(byOrder);
   if (isNew && !members.length) { toast('先に設定画面でメンバーを登録してください', 'error'); return; }
   const groupType = isNew ? null : ev.recurrenceId ? 'rec' : ev.batchId ? 'batch' : null;
   const rec = ev.recurrenceId ? S.recurrences.find(r => r.id === ev.recurrenceId) : null;
@@ -1281,7 +1296,7 @@ function openEventDialog(o) {
     const allVal = groupType === 'rec' ? 'future' : 'group';
     scopeHtml = `<div class="row"><label>適用範囲</label><div class="fld"><p class="hint" style="margin-top:.35rem">${esc(info)}</p>
       <label class="inline"><input type="radio" name="scope" value="one" checked> この1件のみ</label>
-      <label class="inline"><input type="radio" name="scope" value="${allVal}"> ${groupType === 'rec' ? 'この日以降のすべて' : '同じグループのすべて'}</label></div></div>`;
+      <label class="inline"><input type="radio" name="scope" value="${allVal}"> ${groupType === 'rec' ? 'この日以降' : '同じグループ'}の${isAdmin() ? '' : '自分の記録'}すべて</label></div></div>`;
   }
   const meta = isNew ? '' : `<p class="meta">作成：${esc(ev.createdByName || ev.createdBy || '')} ${fmtTs(ev.createdAt)}　／　最終更新：${esc(ev.updatedByName || ev.updatedBy || '')} ${fmtTs(ev.updatedAt)}</p>`;
 
@@ -1358,7 +1373,8 @@ async function saveNewEvents(f) {
 async function groupEvents(ev, scope) {
   const field = scope === 'future' ? 'recurrenceId' : 'batchId';
   const snap = await getDocs(query(collection(db, 'events'), where(field, '==', ev[field])));
-  const list = docsOf(snap);
+  // メンバーは、管理者がまとめて登録したグループのうち自分の記録だけを対象にする
+  const list = docsOf(snap).filter(x => canEditTarget(x.targetId));
   return scope === 'future' ? list.filter(x => x.date >= ev.date) : list;
 }
 
@@ -1376,7 +1392,7 @@ async function saveEditEvent(f, ev, groupType, rec) {
   }
   const list = await groupEvents(ev, scope);
   const ops = list.map(x => ({ type: 'update', ref: doc(db, 'events', x.id), data: { ...fields, ...stampUpd() } }));
-  if (scope === 'future' && rec) ops.push({ type: 'update', ref: doc(db, 'recurrences', rec.id), data: { ...fields, ...stampUpd() } });
+  if (scope === 'future' && rec && canEditTargets(rec.targetIds)) ops.push({ type: 'update', ref: doc(db, 'recurrences', rec.id), data: { ...fields, ...stampUpd() } });
   const before = { slot: ev.slot, category: ev.category, title: ev.title, location: ev.location, theme: ev.theme };
   await commitOps(ops, { action: 'update', entity: 'event', summary: `記録を一括変更（${scope === 'future' ? 'この日以降の繰り返し' : 'グループ'} ${list.length}件）：${describeEv({ ...ev, ...fields })}`, docIds: list.map(x => x.id), before, after: fields });
   toast(`${list.length}件を更新しました`);
@@ -1394,7 +1410,7 @@ async function deleteEvent(f, ev, groupType, rec) {
   const list = await groupEvents(ev, scope);
   if (!confirm(`${list.length}件を削除しますか？`)) return false;
   const ops = list.map(x => ({ type: 'delete', ref: doc(db, 'events', x.id) }));
-  if (scope === 'future' && rec) {
+  if (scope === 'future' && rec && canEditTargets(rec.targetIds)) {
     if (ev.date <= rec.startDate) ops.push({ type: 'delete', ref: doc(db, 'recurrences', rec.id) });
     else ops.push({ type: 'update', ref: doc(db, 'recurrences', rec.id), data: { endDate: ymd(addDays(parseYmd(ev.date), -1)), ...stampUpd() } });
   }
@@ -1408,6 +1424,7 @@ async function deleteEvent(f, ev, groupType, rec) {
 // =====================================================================
 async function stopRecurrence(r) {
   if (!r) return;
+  if (!canEditTargets(r.targetIds)) throw new UserError('他のメンバーを含む繰り返し登録は、管理者のみ終了できます');
   const today = todayStr();
   if (!confirm(`この繰り返し登録を終了し、今日（${fmtMD(today)}）以降に作られている分を削除しますか？\n今日より前の記録は残ります。`)) return;
   const list = docsOf(await getDocs(query(collection(db, 'events'), where('recurrenceId', '==', r.id)))).filter(x => x.date >= today);
@@ -1457,7 +1474,7 @@ function settingsRec() {
     return `<tr><td>${ended ? '<span class="badge gray">終了</span>' : '<span class="badge ok">継続中</span>'}</td><td>${esc(r.targetIds.map(memberName).join('・'))}</td><td>${esc(recDesc(r))}</td>
       <td><span class="swatch" style="background:${c?.color || '#888'}"></span> ${esc(c?.name || '')} ${esc(r.title || '')}</td>
       <td>${fmtYMD(r.startDate)}〜${fmtYMD(r.endDate)}</td>
-      <td class="act">${ended ? '' : `<button class="small danger" data-act="rec-stop" data-id="${r.id}">終了</button>`}</td></tr>`;
+      <td class="act">${ended ? '' : canEditTargets(r.targetIds) ? `<button class="small danger" data-act="rec-stop" data-id="${r.id}">終了</button>` : '<span class="hint">管理者のみ終了できます</span>'}</td></tr>`;
   };
   const all = [...S.recurrences].sort((a, b) => (a.endDate < today) - (b.endDate < today) || a.endDate.localeCompare(b.endDate));
   return `<h3>繰り返し登録（旧機能）</h3>

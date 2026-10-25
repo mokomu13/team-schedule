@@ -1,10 +1,11 @@
 rules_version = '2';
 
-// 開発チーム予定表 - Firestore セキュリティルール
+// 開発チーム業務記録 - Firestore セキュリティルール
 // ・メール確認済み（email_verified）かつ allowedUsers/{メールアドレス} に登録されたユーザーだけが利用できる
 // ・役割（allowedUsers.role）：admin（管理者）／member（メンバー）／viewer（閲覧者）
 //     読み取り ……………………………… 全役割（編集履歴・閲覧者一覧は管理者のみ）
-//     予定・繰り返し予定・履歴の作成 … 管理者・メンバー
+//     記録・繰り返し登録の書き込み …… 管理者は全員分、メンバーは自分の分（allowedUsers.memberId）だけ
+//     履歴の作成 ……………………………… 管理者・メンバー
 //     設定・メンバー・閲覧者・ログイン許可・設備の変更 … 管理者のみ
 // ・allowedUsers は管理者しか書き込めないため、閲覧者やメンバーが自分の role を書き換えることはできない
 service cloud.firestore {
@@ -35,6 +36,21 @@ service cloud.firestore {
     // 予定などを書き込める役割（管理者・メンバー）。閲覧者は含まない
     function canEdit() {
       return isUser() && roleOf(userData()) in ['admin', 'member'];
+    }
+    // 自分のメンバーID（allowedUsers.memberId）。無ければ空文字＝誰の記録にも一致しない
+    function myMemberId() {
+      return userData().get('memberId', '');
+    }
+    function isMine(targetId) {
+      return myMemberId() != '' && targetId == myMemberId();
+    }
+    // 管理者は全員分、メンバーは自分の記録だけ書き込める
+    function canWriteTarget(targetId) {
+      return isAdmin() || (canEdit() && isMine(targetId));
+    }
+    // 繰り返し登録：管理者は全員分、メンバーは対象が自分1人だけのもの
+    function canWriteTargets(targetIds) {
+      return isAdmin() || (canEdit() && myMemberId() != '' && targetIds.size() == 1 && targetIds[0] == myMemberId());
     }
 
     // 場所は選択式（index.html の LOCATIONS と合わせる）
@@ -97,18 +113,21 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // 予定（管理者・メンバーは全員分を編集可能。閲覧者は読み取りのみ）
+    // 記録・予定（閲覧は全員。書き込みは管理者＝全員分、メンバー＝自分の記録だけ、閲覧者＝不可）
     match /events/{eventId} {
       allow read: if isUser();
-      allow create, update: if canEdit() && validEvent();
-      allow delete: if canEdit();
+      allow create: if validEvent() && canWriteTarget(request.resource.data.targetId);
+      // 変更前と変更後の両方が自分の記録であること（他人への付け替え・他人からの付け替えを防ぐ）
+      allow update: if validEvent() && canWriteTarget(resource.data.targetId) && canWriteTarget(request.resource.data.targetId);
+      allow delete: if canWriteTarget(resource.data.targetId);
     }
 
-    // 繰り返し予定のルール
+    // 繰り返し登録（旧機能）。終了操作も本人分のみ（管理者は全員分）
     match /recurrences/{recurrenceId} {
       allow read: if isUser();
-      allow create, update: if canEdit() && validRecurrence();
-      allow delete: if canEdit();
+      allow create: if validRecurrence() && canWriteTargets(request.resource.data.targetIds);
+      allow update: if validRecurrence() && canWriteTargets(resource.data.targetIds) && canWriteTargets(request.resource.data.targetIds);
+      allow delete: if canWriteTargets(resource.data.targetIds);
     }
 
     // 編集履歴（読み取り・削除は管理者のみ、作成は管理者・メンバー、更新は不可）
